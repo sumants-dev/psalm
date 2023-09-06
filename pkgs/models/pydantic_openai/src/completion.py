@@ -4,6 +4,7 @@ Related: https://platform.openai.com/docs/api-reference/completions/create
 """
 from enum import Enum
 from typing import List, Dict, Union, Optional
+import typing
 from pydantic import BaseModel
 
 from .common import Usage
@@ -37,7 +38,7 @@ class CodexModel(str, Enum):
 
 class PromptType:
     @staticmethod
-    def checkPromptType(prompt: Union[str, List[str]]) -> bool:
+    def checkPromptType(prompt: str | List[str] | typing.Any) -> bool:
         return isinstance(prompt, str) or isinstance(prompt, list)
 
 class CompletionRequest(BaseModel):
