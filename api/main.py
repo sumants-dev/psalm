@@ -1,7 +1,7 @@
 
 from fastapi import FastAPI 
 
-from api.openai.handler import router as openapi_router
+from api.llm.handler import router as openapi_router
 app = FastAPI()
 
-app.include_router(openapi_router, prefix="/openapi")
+app.include_router(openapi_router, prefix="/llm")
