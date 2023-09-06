@@ -14,7 +14,7 @@ router = APIRouter()
 
 PlaceholderSystemPrompt = (
     "Ensure that all placeholders, including those inside quotes, are enclosed by the greek letter alpha (α), "
-    "exactly as I have done in this prompt. You MUST use the greek lette (α) to indicate placeholders."
+    "exactly as I have done in this prompt. You MUST use the greek letter (α) to indicate placeholders."
     "Do not include any additional text or explanations. Simply follow this format accurately."
 )
 
