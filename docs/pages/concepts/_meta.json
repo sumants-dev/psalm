@@ -1,0 +1,6 @@
+{
+    "architecture": "Architecture",
+    "masking": "Masking",
+    "harmfulness": "Harmfulness",
+    "rag": "Retrieval Augmented Generation"
+}

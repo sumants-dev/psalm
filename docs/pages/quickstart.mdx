@@ -1,0 +1,44 @@
+# Quickstart
+
+Once you have pontus running, it is easy to use it within your application.
+
+Here is a simple example of using Pontus to ask a question for a simple task, but in privacy protecting manner.
+
+```python
+import requests, json
+
+base_api_url = "http://localhost:8000"
+
+body = {
+    "provider": "openai",
+    "model": "gpt-3.5-turbo",
+    "messages": [
+        {
+            "role": "system",
+            "content": "Context: Drake is very passionate about technology and loves tinkering with new products. He enjoys spending quality time in nature in his free time. He's early in his career, so he's willing to forgo salary for career growth. Josh is an entrepreneur at heart and believes that tech companies are the best suited for making lots of money. He's willing to work long hours, as long as he's working on a cause he believes in.",
+            "name": "context"
+        },
+        {
+            "role": "system",
+            "content": "Please provide a JSON response with the following format: {name: [ordered list of features]}"
+        },
+        {
+            "role": "user",
+            "content": "Rank the importance of these features of jobs for Drake and Josh: 1. Compensation 2. Work Life Balance 3. Company Mission",
+            "name": "rankings"
+        }
+    ]
+}
+
+
+res = requests.post(
+    f"{base_api_url}/llm/chat/completions?full_response=true", # full_response=true will return anoymized queries for debugging
+    json=body
+)
+
+response = res.json()
+
+```
+
+
+That's it for now! We are working on more documentation and tutorials, but feel free to reach out to us at sumant@pontus.so if you have any questions.
