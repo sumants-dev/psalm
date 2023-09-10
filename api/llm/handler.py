@@ -51,11 +51,9 @@ async def create_chat_completion(
         choice.message.content = anonymizer.deanonymize(choice.message.content)
 
 
-    res = ChatCompletionSecureResponse(
-        **comp.model_dump(exclude_none=True),
+    res = ChatCompletionSecureResponse.from_openai_response(
+        comp,
+        anoymized_queries= messages if full_response else None,
     )
-    if full_response:
-        res.anoymized_queries = messages
-
 
     return res

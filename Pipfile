@@ -12,6 +12,8 @@ openai = "*"
 spacy = "*"
 download = "*"
 python-dotenv = "*"
+scikit-learn = "*"
+alt-profanity-check = "*"
 
 [dev-packages]
 mypy = "*"
