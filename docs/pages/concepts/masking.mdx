@@ -1,8 +1,14 @@
 import Image from 'next/image'
+import { Callout } from 'nextra-theme-docs'
 
-# Data Masking
 
-Data Masking is the process of taking sensitive information and replacing it with a random string of characters. The goal is to protect the data being read and protecting the PII (Personally Identifiable Information) of the data.  Pontus does this for every prompt that is sent to our API Trust layer. 
+# PII Santization
+
+<Callout type="warning" emoji="🏗️">
+    Under Construction. We are still building this module out.
+</Callout>
+
+PII Santization is the process of taking sensitive information and replacing it with a random string of characters. The goal is to protect the data being read and protecting the PII (Personally Identifiable Information) of the data.  Pontus does this for every prompt that is sent to our API Trust layer. 
 
 Here is a high level illustration of how Pontus does this:
 <Image src="/TokenizationPrompt.png" width="800" height="400"/>

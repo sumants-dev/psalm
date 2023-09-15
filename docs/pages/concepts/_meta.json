@@ -1,6 +1,9 @@
 {
-    "architecture": "Architecture",
-    "masking": "Masking",
-    "harmfulness": "Harmfulness",
-    "rag": "Retrieval Augmented Generation"
+    "decoupling": "Decoupling",
+    "masking": "PII Santization",
+    "caching": "Caching",
+    "rag": "Retrieval Augmented Generation",
+    "harmfulness": "Toxicity Check",
+    "rbac": "Role Based Access Control",
+    "logging": "Logging"
 }
