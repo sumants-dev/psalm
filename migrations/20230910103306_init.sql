@@ -2,19 +2,19 @@
 -- +goose StatementBegin
 SELECT 'up SQL query';
 CREATE EXTENSION vector;
-CREATE TABLE vector_store (
+CREATE TABLE node (
     id bigserial primary key,
-    content text,
-    metadata JSONB,
-    embedding vector(384) --Using MINI v12 embedding
+    content text not null,
+    metadata JSONB not null,
+    embedding vector(384) not null --Using MINI v12 embedding
 );
-CREATE INDEX metadata_gin ON vector_store USING gin (metadata jsonb_path_ops);
+CREATE INDEX metadata_gin ON node USING gin (metadata jsonb_path_ops);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
 SELECT 'down SQL query';
 DROP INDEX metadata_gin;
-DROP TABLE vector_store;
+DROP TABLE node;
 DROP EXTENSION vector;
 -- +goose StatementEnd

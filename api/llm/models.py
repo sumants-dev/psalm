@@ -2,7 +2,7 @@ import typing
 import pydantic
 import enum
 from pkgs.models import pydantic_openai as models_openai
-from pkgs.toxicity.toxicity import check_toxicity
+from pkgs.modifiers.toxicity.remove_toxicity import check_toxicity
 
 
 class Provider(str, enum.Enum):
@@ -36,7 +36,6 @@ class ChatCompletionSecureRequest(pydantic.BaseModel):
     model: models_openai.GPT3Models = models_openai.GPT3Models.GPT3Dot5Turbo
     messages:  typing.List[models_openai.ChatCompletionMessage]
 
-
 class ChatCompletionSecureResponse(models_openai.ChatCompletionResponse):
     anoymized_queries: typing.List[models_openai.ChatCompletionMessage] | None = None
     choices: typing.List[PontusChatCompletionChoice]
@@ -68,3 +67,16 @@ class ChatCompletionSecureResponse(models_openai.ChatCompletionResponse):
             usage = response.usage,
             anoymized_queries=anoymized_queries,
         )
+    
+class DemoDocumentStoreRequest(pydantic.BaseModel):
+    page_names: typing.List[str]
+
+class DemoRAGRequest(pydantic.BaseModel):
+    user_prompt: str
+    context_titles: typing.List[str]
+    response_spec: str
+
+class DemoRAGResponse(pydantic.BaseModel):
+    prompt: str
+    llm_response: str
+    pontus_response: str

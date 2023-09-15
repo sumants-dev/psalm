@@ -7,13 +7,16 @@ name = "pypi"
 fastapi = {extras = ["all"], version = "*"}
 presidio-analyzer = "*"
 pycryptodome = "*"
-openapi = "*"
 openai = "*"
 spacy = "*"
 download = "*"
 python-dotenv = "*"
+sqlalchemy = "*"
+llama-index = "*"
 scikit-learn = "*"
 alt-profanity-check = "*"
+sentence-transformers = "*"
+guidance = "*"
 
 [dev-packages]
 mypy = "*"

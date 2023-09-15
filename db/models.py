@@ -2,12 +2,12 @@
 # versions:
 #   sqlc v1.21.0
 import dataclasses
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclasses.dataclass()
-class VectorStore:
+class Node:
     id: int
-    content: Optional[str]
-    metadata: Optional[Any]
-    embedding: Optional[Any]
+    content: str
+    metadata: Any
+    embedding: Any

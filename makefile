@@ -1,6 +1,6 @@
 dev:
 	uvicorn api.main:app --reload
-sql:
+gen:
 	sqlc generate
 migration:
 	goose create $(name) sql
