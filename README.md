@@ -1,4 +1,4 @@
-# Pontus
+# Pontus - The Open Source AI Orchestration Layer
 
 `Pontus` creates a zero-trust microservice layer between you and LLM providers. Our main feature is that we provide the ability to santize PII in prompts and documents retrieved from RAG systems, yet keep AIs ability to personalize and answer approriately.
 
