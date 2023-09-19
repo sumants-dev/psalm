@@ -1,5 +1,5 @@
 dev:
-	uvicorn api.main:app --reload
+	uvicorn main:app --reload
 gen:
 	sqlc generate
 migration:

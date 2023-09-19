@@ -5,25 +5,8 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from enum import Enum
 from typing import List, Tuple
-from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
+from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer, EntityResolution, PII_Type
 
-class PII_Type(Enum):
-    phone = "PHONE_NUMBER"
-    email = "EMAIL_ADDRESS"
-    person = "PERSON"
-    place = "LOCATION"
-    time = "DATE_TIME"
-    social = "NRP"
-    ip = "IP_ADDRESS"
-    card = "CREDIT_CARD"
-    bank = "US_BANK_NUMBER"
-    passport = "US_PASSPORT"
-    ssn = "US_SSN"
-
-#How do we identify which PII are the same?
-class EntityResolution(Enum):
-    equality = "EQUALITY"
-    containment = "CONTAINMENT"
     
 class PresidioAnonymizer(Anonymizer):
     bs = AES.block_size
@@ -82,13 +65,3 @@ class PresidioDeanonymizer(Deanonymizer):
         Undo padding
         """
         return s[:-ord(s[len(s)-1:])]
-
-
-if __name__ == "__main__":
-    text = "My phone number is 2125555555 and my email is abc@gmail.com and my name is Gonzales Gama and I live in Texas and I think Texas is the greatest place on earth"
-    key="AsnDnjkktOPMNrS="
-    anonymizer = Anonymizer(key=key, pii_types = [PII_Type.phone, PII_Type.email, PII_Type.person, PII_Type.place])
-    deanonymizer = Deanonymizer(key=key)
-    output = anonymizer.transform(text)
-    print(output)
-    print(deanonymizer.transform(output))

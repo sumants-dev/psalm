@@ -2,7 +2,7 @@ import typing
 import pydantic
 import enum
 from pkgs.models import pydantic_openai as models_openai
-from pkgs.modifiers.toxicity.remove_toxicity import check_toxicity
+from pkgs.models.pontus.base import ChatMessage, ChatResponse, OpenAIOptions
 
 
 class Provider(str, enum.Enum):
@@ -34,39 +34,13 @@ class PontusChatCompletionChoice(models_openai.ChatCompletionChoice):
 class ChatCompletionSecureRequest(pydantic.BaseModel):
     provider: Provider
     model: models_openai.GPT3Models = models_openai.GPT3Models.GPT3Dot5Turbo
-    messages:  typing.List[models_openai.ChatCompletionMessage]
+    messages:  typing.List[ChatMessage]
+    titles: typing.List[str] = []
+    context_prompt: str = ""
+    options: OpenAIOptions | None = None
 
-class ChatCompletionSecureResponse(models_openai.ChatCompletionResponse):
-    anoymized_queries: typing.List[models_openai.ChatCompletionMessage] | None = None
-    choices: typing.List[PontusChatCompletionChoice]
-
-    @classmethod
-    def from_openai_response(
-        cls, 
-        response: models_openai.ChatCompletionResponse,
-        anoymized_queries: typing.List[models_openai.ChatCompletionMessage] | None = None,
-    ) -> "ChatCompletionSecureResponse":
-
-        choices = [ 
-            PontusChatCompletionChoice(
-                index=c.index,
-                message= PontusChatCompletionMessage.from_openai_message(
-                    message=c.message,
-                    metadata=PontusChatCompletionMetadata(is_toxic=check_toxicity(c.message.content))
-                ),
-                finish_reason=c.finish_reason,
-            ) for c in response.choices
-        ]
-
-        return cls(
-            id = response.id,
-            object = response.object,
-            created = response.created,
-            model = response.model,
-            choices = choices,
-            usage = response.usage,
-            anoymized_queries=anoymized_queries,
-        )
+class ChatCompletionSecureResponse(ChatResponse):
+    raw_request: typing.List[ChatMessage] | None = None
     
 class DemoDocumentStoreRequest(pydantic.BaseModel):
     page_names: typing.List[str]

@@ -17,12 +17,15 @@ scikit-learn = "*"
 alt-profanity-check = "*"
 sentence-transformers = "*"
 guidance = "*"
+psycopg2-binary = "*"
+requests = "*"
 
 [dev-packages]
 mypy = "*"
 uvicorn = "*"
 ipython = "*"
 ipykernel = "*"
+black = "*"
 
 [requires]
 python_version = "3.10"

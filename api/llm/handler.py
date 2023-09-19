@@ -12,12 +12,17 @@ from pkgs.modifiers.stop_words.remove_stop_words import RemoveStopWords
 from pkgs.modifiers.anonymity.presidio_anonymizer import PresidioAnonymizer, PresidioDeanonymizer, PII_Type, EntityResolution
 from pkgs.chunkers.sentence_chunker import SentenceChunker
 from pkgs.embedders.sentence_embedder import SentenceEmbedder
+from pkgs.orchestrator import orchestrator
+
+from pkgs.models.pontus.base import ChatMessage, ChatMessageRole
 from pkgs.vector_dbs.pg_vector_store import PgVectorStore
 from pkgs.llm.guidance import LLM, ModelProvider
 
-from pkgs.config.setting import Settings
+from pkgs.config.setting import Settings, getSettings
 
-settings = Settings()
+from api.llm.helpers import retrieve_context
+
+settings = getSettings()
 
 router = APIRouter()
 
@@ -33,115 +38,39 @@ RAGSystemPrompt = (
     "format accurately."
 )
 
-PlaceholderMessage = models_openai.ChatCompletionMessage(role=models_openai.ChatMessageRole.System, content=PlaceholderSystemPrompt, name=None)
-
-
-loader = WikiLoader()
-rm_stopwords = RemoveStopWords()
-sentence_chunker = SentenceChunker(2, 256)
-sentence_embedder = SentenceEmbedder("all-MiniLM-L6-v2")
-containment_anonymizer = PresidioAnonymizer(
-    settings.anonymizer_key,
-    0.5,
-    EntityResolution.containment,
-    [PII_Type.person, PII_Type.email]
+RagSystemPromptMessage = ChatMessage(
+    role=ChatMessageRole.System, 
+    content=RAGSystemPrompt, 
+    name=None
 )
-equality_anonymizer = PresidioAnonymizer(
-    settings.anonymizer_key,
-    0.5,
-    EntityResolution.containment,
-    [PII_Type.person, PII_Type.email]
-)
-deanonimyzer = PresidioDeanonymizer(settings.anonymizer_key)
-vector_db = PgVectorStore(settings.postgres_cnxn_str)
-llm = LLM(ModelProvider.OpenAI, "text-davinci-003", api_key = settings.open_api_key)
 
 
-@router.post("/chat/completions")
+
+@router.post("/chat/completions", tags=["llm"])
 async def create_chat_completion(
     chat_completion: ChatCompletionSecureRequest,
-    full_response: bool = False,
+    enable_rag: bool = False,
+    debug: bool = False,
 ) -> ChatCompletionSecureResponse:
+    ai_orchestrator = orchestrator.get_orchestrator()
 
-    messages = [PlaceholderMessage] + chat_completion.messages
+    context_messages = [retrieve_context(ai_orchestrator, chat_completion.context_prompt, chat_completion.titles)] if enable_rag else []
 
-    containment_anonymizer.transform(messages)
-
-
-    anonymized_messages = [msg.model_dump(exclude_none=True) for msg in messages]
-    completion: typing.Dict = openai.ChatCompletion.create(
-         model=chat_completion.model,
-         messages=anonymized_messages,
-     ) # type: ignore
-    
-    comp = models_openai.ChatCompletionResponse(
-        **completion
+    transformed_messages = [RagSystemPromptMessage] + ai_orchestrator.pre_process(
+        chat_completion.messages + context_messages
     )
 
-    for choice in comp.choices:
-        choice.message.content = deanonimyzer._transform(choice.message.content)
-
-
-    res = ChatCompletionSecureResponse.from_openai_response(
-        comp,
-        anoymized_queries= messages if full_response else None,
+    chat_response = ai_orchestrator.call_llm(
+        model=chat_completion.model, 
+        msgs=transformed_messages,
+        options=chat_completion.options,
+        debug=debug,
     )
 
-    return res
 
-@router.post("/demo/load_wiki_pages")
-async def load_wiki_pages(
-    request: DemoDocumentStoreRequest
-):
-    wiki_pages = [loader.load(page_name) for page_name in request.page_names]
-
-    nodes = [
-        node
-        for metadata, page in wiki_pages
-        for node in sentence_chunker.text_to_nodes(rm_stopwords.transform(page), metadata)
-    ]
-
-    sentence_embedder.embed(nodes)
-
-    equality_anonymizer.transform(nodes)
-
-    vector_db.save_nodes(nodes, "Node")
-
-@router.post("/demo/rag")
-async def chat_completion_with_rag(
-    request: DemoRAGRequest
-) -> DemoRAGResponse:
-    nodes = [
-        Node(request.user_prompt, {"doc": title}, None)
-        for title in request.context_titles
-    ]
-
-    sentence_embedder.embed(nodes)
-
-    similar_nodes = [
-        similar_node
-        for node in nodes
-        for similar_node, distance in vector_db.find_similar_nodes(node, 'Node', 5)
-    ]
-
-    def format_context_nodes(node: Node):
-        title = node.metadata["doc"]
-        content = deanonimyzer._transform(node.content)
-        return f"From the {title} wiki page, {content}"
-    
-    raw_context = "\n".join(map(format_context_nodes, similar_nodes))
-    context = f"Below is useful context. Do not answer the question yet.\n{raw_context}\n---\n"
-
-    json_structure = f"\n---\n```json{request.response_spec}```"
-
-    full_guidance_prompt = RAGSystemPrompt + containment_anonymizer.transform(
-        context + request.user_prompt + json_structure
+    return ChatCompletionSecureResponse(
+        messages=chat_response.messages,
+        deanoymized_provider_response=chat_response.deanoymized_provider_response,
+        raw_provider_response=chat_response.raw_provider_response,
+        raw_request=transformed_messages if debug else None,
     )
-
-    response = llm.prompt(full_guidance_prompt)
-
-    return {
-        "prompt": full_guidance_prompt,
-        "llm_response": response,
-        "pontus_response": deanonimyzer.transform(response)
-    }

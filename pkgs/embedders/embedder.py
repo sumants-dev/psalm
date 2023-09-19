@@ -7,7 +7,7 @@ class Embedder:
         """
         Produce a vector embedding for every chunk
         """
-        return NotImplementedError("Must implement _embed")
+        raise NotImplementedError("Must implement _embed")
     
     def embed(self, nodes: List[Node]):
         """

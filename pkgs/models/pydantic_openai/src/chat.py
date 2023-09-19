@@ -12,6 +12,7 @@ class ChatMessageRole(str, Enum):
     System = "system"
     User = "user"
     Assistant = "assistant"
+    Function = "function"
 
 class ChatCompletionMessage(BaseModel):
     role: ChatMessageRole

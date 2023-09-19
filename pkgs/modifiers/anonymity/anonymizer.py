@@ -1,6 +1,23 @@
 from typing import Iterator, Tuple
 from pkgs.modifiers.modifier import Modifier
-    
+from enum import Enum    
+class PII_Type(str, Enum):
+    phone = "PHONE_NUMBER"
+    email = "EMAIL_ADDRESS"
+    person = "PERSON"
+    place = "LOCATION"
+    time = "DATE_TIME"
+    social = "NRP"
+    ip = "IP_ADDRESS"
+    card = "CREDIT_CARD"
+    bank = "US_BANK_NUMBER"
+    passport = "US_PASSPORT"
+    ssn = "US_SSN"
+
+#How do we identify which PII are the same?
+class EntityResolution(str, Enum):
+    equality = "EQUALITY"
+    containment = "CONTAINMENT"
 class Anonymizer(Modifier):
     """
     Modifier to anonymize any PII from text
@@ -13,7 +30,7 @@ class Anonymizer(Modifier):
         """
         raise NotImplementedError("_find_pii_locations must be implemented")
 
-    def _encrypt(self, raw: str) -> str | bytes:
+    def _encrypt(self, raw: str) -> bytes:
         """
         Encrypt the inputted text 
         """
