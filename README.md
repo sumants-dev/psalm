@@ -7,14 +7,14 @@
 
 ## Why Pontus
 
-Open Source: Extensibility and transparency are core to our mission.
-Privacy: We tokenize PII and prevent it from being sent to AI services.
-Zero-Trus: We do not store PII anywhere at REST.
-Secure RAG: We add context and prevent hallucination through RAG without exposing unsantized document data.
-Safety: We prevent dangerous content from being sent to or from AI services.
-Monitoring: We provide monitoring and auditing of AI requests and responses.
-Decoupling: We decouple your application from AI services, allowing you to switch between AI services without changing your application.
-Self Hosting: We allow you to self host Pontus, giving you full control over your data.
+* Open Source: Extensibility and transparency are core to our mission.
+* Privacy: We tokenize PII and prevent it from being sent to AI services.
+* Zero-Trust: We do not store PII anywhere at REST.
+* Secure RAG: We add context and prevent hallucination through RAG without exposing unsantized document data.
+* Safety: We prevent dangerous content from being sent to or from AI services.
+* Monitoring: We provide monitoring and auditing of AI requests and responses.
+* Decoupling: We decouple your application from AI services, allowing you to switch between AI services without changing your application.
+* Self Hosting: We allow you to self host Pontus, giving you full control over your data.
 
 ## Quickstart
 
