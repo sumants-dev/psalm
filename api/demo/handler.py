@@ -47,20 +47,20 @@ rm_stopwords = RemoveStopWords()
 sentence_chunker = SentenceChunker(2, 256)
 sentence_embedder = SentenceEmbedder("all-MiniLM-L6-v2")
 containment_anonymizer = PresidioAnonymizer(
-    settings.anoymizer.key,
+    settings.llm.anoymizer.key,
     0.5,
     EntityResolution.containment,
     [PII_Type.person, PII_Type.email]
 )
 equality_anonymizer = PresidioAnonymizer(
-    settings.anoymizer.key,
+    settings.llm.anoymizer.key,
     0.5,
     EntityResolution.containment,
     [PII_Type.person, PII_Type.email]
 )
-deanonimyzer = PresidioDeanonymizer(settings.anoymizer.key)
-vector_db = PgVectorStore(settings.vector_db.conn_str)
-llm = LLM(ModelProvider.OpenAI, "text-davinci-003", api_key = settings.provider.api_key)
+deanonimyzer = PresidioDeanonymizer(settings.llm.anoymizer.key)
+vector_db = PgVectorStore(settings.rag.vector_db.conn_str)
+llm = LLM(ModelProvider.OpenAI, "text-davinci-003", api_key = settings.llm.provider.api_key)
 
 
 

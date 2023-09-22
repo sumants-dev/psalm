@@ -1,0 +1,671 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Pontus",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/llm/chat/completions": {
+            "post": {
+                "tags": [
+                    "llm"
+                ],
+                "summary": "Create Chat Completion",
+                "operationId": "create_chat_completion_llm_chat_completions_post",
+                "parameters": [
+                    {
+                        "name": "enable_rag",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Enable Rag"
+                        }
+                    },
+                    {
+                        "name": "debug",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Debug"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatCompletionSecureRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatCompletionSecureResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/demo/load_wiki_pages": {
+            "post": {
+                "tags": [
+                    "demo"
+                ],
+                "summary": "Load Wiki Pages",
+                "operationId": "load_wiki_pages_demo_load_wiki_pages_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DemoDocumentStoreRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/demo/rag": {
+            "post": {
+                "tags": [
+                    "demo"
+                ],
+                "summary": "Chat Completion With Rag",
+                "operationId": "chat_completion_with_rag_demo_rag_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DemoRAGRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DemoRAGResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ChatCompletionChoice": {
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "title": "Index"
+                    },
+                    "message": {
+                        "$ref": "#/components/schemas/ChatCompletionMessage"
+                    },
+                    "finish_reason": {
+                        "type": "string",
+                        "title": "Finish Reason"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "index",
+                    "message",
+                    "finish_reason"
+                ],
+                "title": "ChatCompletionChoice"
+            },
+            "ChatCompletionMessage": {
+                "properties": {
+                    "role": {
+                        "$ref": "#/components/schemas/pkgs__models__pydantic_openai__src__chat__ChatMessageRole"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role",
+                    "content",
+                    "name"
+                ],
+                "title": "ChatCompletionMessage"
+            },
+            "ChatCompletionResponse": {
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Id"
+                    },
+                    "object": {
+                        "type": "string",
+                        "title": "Object"
+                    },
+                    "created": {
+                        "type": "integer",
+                        "title": "Created"
+                    },
+                    "model": {
+                        "type": "string",
+                        "title": "Model"
+                    },
+                    "choices": {
+                        "items": {
+                            "$ref": "#/components/schemas/ChatCompletionChoice"
+                        },
+                        "type": "array",
+                        "title": "Choices"
+                    },
+                    "usage": {
+                        "$ref": "#/components/schemas/Usage"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "id",
+                    "object",
+                    "created",
+                    "model",
+                    "choices",
+                    "usage"
+                ],
+                "title": "ChatCompletionResponse"
+            },
+            "ChatCompletionSecureRequest": {
+                "properties": {
+                    "provider": {
+                        "$ref": "#/components/schemas/Provider"
+                    },
+                    "model": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/GPT3Models"
+                            }
+                        ],
+                        "default": "gpt-3.5-turbo"
+                    },
+                    "messages": {
+                        "items": {
+                            "$ref": "#/components/schemas/ChatMessage-Input"
+                        },
+                        "type": "array",
+                        "title": "Messages"
+                    },
+                    "titles": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Titles",
+                        "default": []
+                    },
+                    "context_prompt": {
+                        "type": "string",
+                        "title": "Context Prompt",
+                        "default": ""
+                    },
+                    "options": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/OpenAIOptions"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "provider",
+                    "messages"
+                ],
+                "title": "ChatCompletionSecureRequest"
+            },
+            "ChatCompletionSecureResponse": {
+                "properties": {
+                    "messages": {
+                        "items": {
+                            "$ref": "#/components/schemas/ChatMessage-Output"
+                        },
+                        "type": "array",
+                        "title": "Messages"
+                    },
+                    "deanoymized_provider_response": {
+                        "$ref": "#/components/schemas/ChatCompletionResponse"
+                    },
+                    "raw_provider_response": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ChatCompletionResponse"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "raw_request": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/ChatMessage-Output"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Raw Request"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "messages",
+                    "deanoymized_provider_response",
+                    "raw_provider_response",
+                    "raw_request"
+                ],
+                "title": "ChatCompletionSecureResponse"
+            },
+            "ChatMessage-Input": {
+                "properties": {
+                    "role": {
+                        "$ref": "#/components/schemas/ChatMessageRole-Input"
+                    },
+                    "content": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "function": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/FunctionCall"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role"
+                ],
+                "title": "ChatMessage"
+            },
+            "ChatMessage-Output": {
+                "properties": {
+                    "role": {
+                        "$ref": "#/components/schemas/pkgs__models__pontus__base__ChatMessageRole"
+                    },
+                    "content": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Content"
+                    },
+                    "name": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Name"
+                    },
+                    "function": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/FunctionCall"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "role",
+                    "content",
+                    "name",
+                    "function"
+                ],
+                "title": "ChatMessage"
+            },
+            "ChatMessageRole-Input": {
+                "type": "string",
+                "enum": [
+                    "user",
+                    "system",
+                    "assistant",
+                    "function"
+                ],
+                "title": "ChatMessageRole"
+            },
+            "DemoDocumentStoreRequest": {
+                "properties": {
+                    "page_names": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Page Names"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "page_names"
+                ],
+                "title": "DemoDocumentStoreRequest"
+            },
+            "DemoRAGRequest": {
+                "properties": {
+                    "user_prompt": {
+                        "type": "string",
+                        "title": "User Prompt"
+                    },
+                    "context_titles": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "title": "Context Titles"
+                    },
+                    "response_spec": {
+                        "type": "string",
+                        "title": "Response Spec"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "user_prompt",
+                    "context_titles",
+                    "response_spec"
+                ],
+                "title": "DemoRAGRequest"
+            },
+            "DemoRAGResponse": {
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "title": "Prompt"
+                    },
+                    "llm_response": {
+                        "type": "string",
+                        "title": "Llm Response"
+                    },
+                    "pontus_response": {
+                        "type": "string",
+                        "title": "Pontus Response"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt",
+                    "llm_response",
+                    "pontus_response"
+                ],
+                "title": "DemoRAGResponse"
+            },
+            "FunctionCall": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "arguments": {
+                        "additionalProperties": {
+                            "type": "string"
+                        },
+                        "type": "object",
+                        "title": "Arguments"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "arguments"
+                ],
+                "title": "FunctionCall"
+            },
+            "GPT3Models": {
+                "type": "string",
+                "enum": [
+                    "gpt-4-32k-0314",
+                    "gpt-4-32k",
+                    "gpt-4-0314",
+                    "gpt-4",
+                    "gpt-3.5-turbo-0301",
+                    "gpt-3.5-turbo",
+                    "text-davinci-003",
+                    "text-davinci-002",
+                    "text-curie-001",
+                    "text-babbage-001",
+                    "text-ada-001",
+                    "text-davinci-001",
+                    "davinci-instruct-beta",
+                    "davinci",
+                    "curie-instruct-beta",
+                    "curie",
+                    "ada",
+                    "babbage"
+                ],
+                "title": "GPT3Models"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "OpenAIOptions": {
+                "properties": {
+                    "temperature": {
+                        "type": "number",
+                        "title": "Temperature"
+                    },
+                    "top_p": {
+                        "type": "number",
+                        "title": "Top P"
+                    },
+                    "frequency_penalty": {
+                        "type": "number",
+                        "title": "Frequency Penalty"
+                    },
+                    "max_tokens": {
+                        "type": "integer",
+                        "title": "Max Tokens"
+                    }
+                },
+                "type": "object",
+                "title": "OpenAIOptions"
+            },
+            "Provider": {
+                "type": "string",
+                "const": "openai",
+                "title": "Provider"
+            },
+            "Usage": {
+                "properties": {
+                    "prompt_tokens": {
+                        "type": "integer",
+                        "title": "Prompt Tokens"
+                    },
+                    "completion_tokens": {
+                        "type": "integer",
+                        "title": "Completion Tokens"
+                    },
+                    "total_tokens": {
+                        "type": "integer",
+                        "title": "Total Tokens"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_tokens",
+                    "completion_tokens",
+                    "total_tokens"
+                ],
+                "title": "Usage"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            },
+            "pkgs__models__pontus__base__ChatMessageRole": {
+                "type": "string",
+                "enum": [
+                    "user",
+                    "system",
+                    "assistant",
+                    "function"
+                ],
+                "title": "ChatMessageRole"
+            },
+            "pkgs__models__pydantic_openai__src__chat__ChatMessageRole": {
+                "type": "string",
+                "enum": [
+                    "system",
+                    "user",
+                    "assistant",
+                    "function"
+                ],
+                "title": "ChatMessageRole"
+            }
+        }
+    }
+}

@@ -32,7 +32,7 @@ class PontusChatCompletionChoice(models_openai.ChatCompletionChoice):
     message: PontusChatCompletionMessage
 
 class ChatCompletionSecureRequest(pydantic.BaseModel):
-    provider: Provider
+    provider: Provider | None = None
     model: models_openai.GPT3Models = models_openai.GPT3Models.GPT3Dot5Turbo
     messages:  typing.List[ChatMessage]
     titles: typing.List[str] = []

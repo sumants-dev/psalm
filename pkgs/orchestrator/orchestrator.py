@@ -1,13 +1,20 @@
 from pkgs import Node
-from pkgs.chunkers.chunker import Chunker
 from pkgs.embedders.embedder import Embedder
 from pkgs.embedders.sentence_embedder import SentenceEmbedder
 from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
-from pkgs.modifiers.anonymity.presidio_anonymizer import EntityResolution, PII_Type, PresidioAnonymizer, PresidioDeanonymizer
+from pkgs.modifiers.anonymity.presidio_anonymizer import (
+    PresidioAnonymizer,
+    PresidioDeanonymizer,
+)
 from pkgs.modifiers.modifier import Modifier
 
 from pkgs.models import pydantic_openai
-from pkgs.models.pontus.base import ChatMessage, ChatResponse, OpenAIOptions, ProviderType
+from pkgs.models.pontus.base import (
+    ChatMessage,
+    ChatResponse,
+    OpenAIOptions,
+    ProviderType,
+)
 
 from copy import deepcopy
 
@@ -15,167 +22,258 @@ from typing import TypeVar, List, Dict, Any
 
 
 import openai
+from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, VectorDBConfig, VectorDBType
 from pkgs.vector_dbs.pg_vector_store import PgVectorStore
 
 from pkgs.vector_dbs.vector_db import VectorDB
-from pkgs.config.setting import AnoymizerType, EmbedderType, Settings, VectorDBType, getSettings
+from pkgs.config.setting import (
+    getSettings,
+)
 
 
 T = TypeVar("T")
 
 
-class Orchestrator:
-    def __init__(self) -> None:
-        self.embedder: Embedder | None = None
-        self.vector_db: VectorDB | None = None
-        self.provider: ProviderType | None = None
-        self.pre_processing: List[Modifier]  = []
-        self.post_processing: List[Modifier] = []
+class Rag:
+    def __init__(
+        self,
+        vector_db: VectorDB,
+        embedder: Embedder,
+        anoymizer: Anonymizer | None,
+        deanoymizer: Deanonymizer | None,
+        pre_processors: List[Modifier] = [],
+        post_processors: List[Modifier] = [],
+    ) -> None:
+        self._vector_db = vector_db
+        self._embedder = embedder
+        self.pre_processors = pre_processors
+        self.post_processors = post_processors
+        self._anoymizer = anoymizer
+        self._deanoymize = deanoymizer
 
-        self.anoymizer: Anonymizer | None = None
-        self.deanoymizer: Deanonymizer | None = None
+        if anoymizer:
+            self.pre_processors.append(anoymizer)
+        
+        if deanoymizer:
+            self.post_processors.append(deanoymizer)
 
-        self.chunker: Chunker | None = None
-
-        self.openai = openai
-
-    def set_provider_type(self, provider: ProviderType):
-        self.provider = provider
-
-    def set_anonymizer(self, anonymizer: Anonymizer):
-        self.anoymizer = anonymizer
-    
-    def anoymize(self, data: T) -> T:
-        if self.anoymizer:
-            return self.anoymizer.transform(data)
-        return data
-
-    def set_deanonymizer(self, deanonymizer: Deanonymizer):
-        self.deanoymizer = deanonymizer
-
-    def deanoymize(self, data: str) -> str:
-        if self.deanoymizer:
-            return self.deanoymizer.transform(data)
-        return data
-
-    def add_pre_processor(self, modifier: Modifier):
-        self.pre_processing.append(modifier)
-    
-    def add_post_processor(self, modifier: Modifier):
-        self.post_processing.append(modifier)
-    
-    def set_embedder(self, embedder: Embedder):
-        self.embedder = embedder
-    
-    def set_vector_db(self, vector_db: VectorDB):
-        self.vector_db = vector_db
 
     def pre_process(self, data: T) -> T:
         t_data = data
-        for modifier in self.pre_processing:
-            t_data = modifier.transform(t_data)
-        return t_data 
-    
-    def post_process(self, data: T) -> T:
-        t_data = data
-        for modifier in self.post_processing:
-            t_data = modifier.transform(t_data)
+        for modifier in self.pre_processors:
+            modifier.transform(t_data)
         return t_data
 
-    def embed(self, nodes: List[Node]):
-        if self.embedder:
-            self.embedder.embed(nodes)
-        
-    def find_context_nodes(self, nodes: List[Node], max_nodes: int= 5) -> List[Node]:
+    def post_process(self, data: T) -> T:
+        t_data = data
+        for modifier in self.post_processors:
+            modifier.transform(t_data)
+        return t_data
+    
+    @property
+    def anoymizer(self) -> Anonymizer | None:
+        return self._anoymizer
+
+    @property
+    def vector_db(self) -> VectorDB:
+        return self._vector_db
+
+    @property
+    def embedder(self) -> Embedder:
+        return self._embedder
+
+    def find_context_nodes(self, nodes: List[Node], max_nodes: int = 5) -> List[Node]:
         similar_nodes = []
         if self.vector_db:
             similar_nodes = [
                 similar_node
                 for node in nodes
-                for similar_node, distance in 
-                self.vector_db.find_similar_nodes(node, 'Node', max_nodes=max_nodes)
+                for similar_node, distance in self.vector_db.find_similar_nodes(
+                    node, "Node", max_nodes=max_nodes
+                )
             ]
         return similar_nodes
 
-    def _call_openai(
-            self, 
-            model: str,
-            msgs: List[ChatMessage], 
-            opts: OpenAIOptions | None = None,
-            debug: bool = False
-        ) -> ChatResponse:
+class LLM:
+    anoymizer: Anonymizer | None
+    provider: ProviderConfig
+    pre_processors: List[Modifier] = []
+    post_processors: List[Modifier] = []
 
-            settings = getSettings()
-            self.openai.api_key = settings.provider.api_key
-            opts = opts or {}
+    def __init__(
+        self,
+        provider: ProviderConfig,
+        anonymizer: Anonymizer | None = None,
+        deanoymizer: Deanonymizer | None = None,
+        pre_processors: List[Modifier] = [],
+        post_processors: List[Modifier] = [],
+    ) -> None:
+        self.openai = openai
+        self.provider = provider
+        self._anoymizer = anonymizer
 
-            res: Dict[str, Any] = self.openai.ChatCompletion.create(
-                model=model,
-                messages=[m.model_dump(exclude_none=True) for m in msgs],
-                **opts,
-            ) # type: ignore
+        self.pre_processors = pre_processors
+        self.post_processors = post_processors
 
-            open_ai_res = pydantic_openai.ChatCompletionResponse(**res)
+        if anonymizer:
+            self.pre_processors.append(anonymizer)
 
-            processed_msgs = [
-                ChatMessage.from_openai_message(res.message)
-                for res in open_ai_res.choices
-            ]
-
-            post_processed_msgs = self.post_process(processed_msgs)
-
-            orginal_open_ai_res = deepcopy(open_ai_res) if debug else None        
+        if deanoymizer:
+            self.post_processors.append(deanoymizer)
 
 
-            open_ai_res.choices = self.post_process(open_ai_res.choices)
-
-            return ChatResponse(
-                raw_provider_response=orginal_open_ai_res,
-                deanoymized_provider_response=open_ai_res,
-                messages=post_processed_msgs,
-            )
-
-    def call_llm(self, model: str ,msgs: List[ChatMessage], options: OpenAIOptions | None = None, debug: bool = False) -> ChatResponse:
-        match (self.provider):
+    def call_llm(
+        self,
+        msgs: List[ChatMessage],
+        model: str | None = None,
+        options: OpenAIOptions | None = None,
+        debug: bool = False,
+    ) -> ChatResponse:
+        match (self.provider.type):
             case ProviderType.openai:
-                return self._call_openai(model=model, msgs=msgs, opts=options, debug=debug)
+                return self._call_openai(
+                    model=model or self.provider.default_model,
+                    msgs=msgs,
+                    opts=options,
+                    debug=debug
+                )
             case _:
-                raise Exception("Provider not supported")    
+                raise Exception("Provider not supported")
+
+    def pre_process(self, data: T) -> T:
+        t_data = data
+        for modifier in self.pre_processors:
+            t_data = modifier.transform(data)
+        return t_data
+
+    def post_process(self, data: T) -> T:
+        t_data = data
+        for modifier in self.post_processors:
+            t_data = modifier.transform(data)
+        return t_data
+
+    def _call_openai(
+        self,
+        model: str,
+        msgs: List[ChatMessage],
+        opts: OpenAIOptions | None = None,
+        debug: bool = False,
+    ) -> ChatResponse:
+        self.openai.api_key = self.provider.api_key
+        opts = opts or {}
+        transformed_msgs = self.pre_process(msgs)
+
+        res: Dict[str, Any] = self.openai.ChatCompletion.create(
+            model=model,
+            messages=[m.model_dump(exclude_none=True) for m in transformed_msgs],
+            **opts,
+        )  # type: ignore
+
+        open_ai_res = pydantic_openai.ChatCompletionResponse(**res)
+
+        processed_msgs = [
+            ChatMessage.from_openai_message(res.message) for res in open_ai_res.choices
+        ]
+
+        post_processed_msgs = self.post_process(processed_msgs)
+
+        orginal_open_ai_res = deepcopy(open_ai_res) if debug else None
+
+        open_ai_res.choices = self.post_process(open_ai_res.choices)
+
+        return ChatResponse(
+            raw_provider_response=orginal_open_ai_res,
+            deanoymized_provider_response=open_ai_res,
+            messages=post_processed_msgs,
+        )
+
+
+class Orchestrator:
+    llm: LLM
+    rag: Rag
+
+    def set_llm(self, llm: LLM) -> None:
+        self.llm = llm
+    
+    def set_rag(self, rag: Rag) -> None:
+        self.rag = rag
 
 orchestrator = Orchestrator()
+
 
 def build_orchestrator():
     settings = getSettings()
 
-    orchestrator.set_provider_type(settings.provider.type)
-    _build_anoymizer(settings)
-    _build_sentence_embedder(settings)
-    _build_vector_db(settings)
 
-def _build_vector_db(settings: Settings):
-    if settings.vector_db.type == VectorDBType.pgvector:
-        orchestrator.set_vector_db(PgVectorStore(settings.vector_db.conn_str))
+    llm = LLM(
+        provider=settings.llm.provider,
+        anonymizer=_build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
+        deanoymizer=_build_deanoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
+        pre_processors=_build_processors(settings.rag.pre_processors) if settings.rag.pre_processors else [],
+        post_processors=_build_processors(settings.rag.post_processors) if settings.rag.post_processors else [],
+    )
 
-def _build_sentence_embedder(settings: Settings):
-    if settings.embedder.type == EmbedderType.sentence:
-        orchestrator.set_embedder(SentenceEmbedder(settings.embedder.model))
+    rag = Rag(
+        vector_db=_build_vector_db(settings.rag.vector_db) ,
+        embedder=_build_embedder(settings.rag.embedder),
+        anoymizer=_build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
+        deanoymizer=_build_deanoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
+        pre_processors=_build_processors(settings.rag.pre_processors) if settings.rag.pre_processors else [],
+        post_processors=_build_processors(settings.rag.post_processors) if settings.rag.post_processors else [],
+    )
 
-def _build_anoymizer(settings: Settings):
-    if settings.anoymizer.type == AnoymizerType.presidio:
-        anoymizer = PresidioAnonymizer(
-            settings.anoymizer.key,
-            settings.anoymizer.threshold,
-            settings.anoymizer.entity_resolution,
-            settings.anoymizer.pii_types
-        ) 
-        orchestrator.set_anonymizer(anoymizer)
-        orchestrator.add_pre_processor(anoymizer)
+    orchestrator.set_llm(llm)
+    orchestrator.set_rag(rag)
 
-        deanoymizer = PresidioDeanonymizer(settings.anoymizer.key) 
-        orchestrator.set_deanonymizer(deanoymizer)
-        orchestrator.add_post_processor(deanoymizer)
-    else:
-        raise Exception("Anonymizer not supported")
+def _build_processors(config: ProcessorConfig) -> List[Modifier]:
+    processors: List[Modifier] = []
+
+    if config.remove_toxicity:
+        # TODO: add toxicity processor
+        return processors
+
+    return processors
+
+def _build_embedder(config: EmbedderConfig) -> Embedder:
+    match (config.type):
+        case EmbedderType.sentence:
+            return SentenceEmbedder(
+                model_name=config.model
+            )
+        case _:
+            raise Exception("Embedder not supported")
+    
+
+def _build_vector_db(config: VectorDBConfig) -> VectorDB:
+    match (config.type):
+        case VectorDBType.pgvector:
+            return PgVectorStore(
+                cnxn_string=config.conn_str
+            )
+        case _:
+            raise Exception("Vector DB not supported")
+
+
+def _build_anoymizer(config: AnoymizerConfig) -> Anonymizer:
+    match (config.type):
+        case AnoymizerType.presidio:
+            return PresidioAnonymizer(
+                key=config.key,
+                threshold=config.threshold,
+                entity_resolution=config.entity_resolution,
+                pii_types=config.pii_types,
+            )
+        case _:
+            raise Exception("Anonymizer not supported")
+
+def _build_deanoymizer(config: AnoymizerConfig) -> Deanonymizer:
+    match (config.type):
+        case AnoymizerType.presidio:
+            return PresidioDeanonymizer(
+                key=config.key,
+            )
+        case _:
+            raise Exception("Anonymizer not supported")
 
 def get_orchestrator():
     return orchestrator

@@ -54,15 +54,20 @@ async def create_chat_completion(
 ) -> ChatCompletionSecureResponse:
     ai_orchestrator = orchestrator.get_orchestrator()
 
-    context_messages = [retrieve_context(ai_orchestrator, chat_completion.context_prompt, chat_completion.titles)] if enable_rag else []
+    context_messages = [
+        retrieve_context(
+            ai_orchestrator,
+            chat_completion.context_prompt,
+            chat_completion.titles,
+        )
+    ] if enable_rag else []
 
-    transformed_messages = [RagSystemPromptMessage] + ai_orchestrator.pre_process(
-        chat_completion.messages + context_messages
-    )
+    msgs = [RagSystemPromptMessage] + chat_completion.messages + context_messages
 
-    chat_response = ai_orchestrator.call_llm(
+
+    chat_response = ai_orchestrator.llm.call_llm(
         model=chat_completion.model, 
-        msgs=transformed_messages,
+        msgs=msgs,
         options=chat_completion.options,
         debug=debug,
     )
@@ -72,5 +77,5 @@ async def create_chat_completion(
         messages=chat_response.messages,
         deanoymized_provider_response=chat_response.deanoymized_provider_response,
         raw_provider_response=chat_response.raw_provider_response,
-        raw_request=transformed_messages if debug else None,
+        raw_request=msgs if debug else None,
     )

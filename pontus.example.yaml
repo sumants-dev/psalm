@@ -1,19 +1,34 @@
 version: "0.1"
-provider:
-  type: openai
-  api_key: put-your-api-key-here
-vector_db:
-  type: pgvector
-  conn_str: put-your-connection-string-here
-embedder:
-  type: sentence
-  model: all-MiniLM-L6-v2
-anoymizer:
-  type: presidio
-  # this is an example key don't use in prod
-  key: WmZq4t7w!z%C&F)J
-  threshold: .5
-  entity_resolution: containment
-  pii_types:
-    - person
-    - email_address
+llm:
+  provider:
+    type: openai
+    default_model: gpt-3.5-turbo
+    api_key: <put-api-key-here>
+  anoymizer:
+    type: presidio
+    # don't use this key in production, it's just for testing
+    key: WmZq4t7w!z%C&F)J
+    threshold: .5
+    entity_resolution: containment
+    pii_types:
+      - person
+      - email_address
+  pre_processors:
+    remove_toxcity:
+      type: simple
+rag:
+  vector_db:
+    type: pgvector
+    conn_str: <put-conn-str-here>
+  embedder:
+    type: sentence
+    model: all-MiniLM-L6-v2
+  anoymizer:
+    type: presidio
+    key: PmhPKHYyLzdvZQ==
+    threshold: .5
+    entity_resolution: containment
+    pii_types:
+      - person
+      - email_address
+ 

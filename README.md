@@ -1,6 +1,6 @@
 # Pontus - The Open Source AI Orchestration Layer
 
-`Pontus` creates a zero-trust microservice layer between you and LLM providers. Our main feature is that we provide the ability to santize PII in prompts and documents retrieved from RAG systems, yet keep AIs ability to personalize and answer approriately.
+`Pontus` creates a zero-trust microservice AI layer between services and LLM. With a configuration first approach, Pontus allows you to manage multiple AI building blocks such as PII, RAG, Caching, and more.
 
 ![Pontus, Architecture](./LLM_Architecture.png)
 
@@ -21,24 +21,38 @@
 1. Create the following configuration file `pontus.yaml`
 ```yaml
 version: "0.1"
-provider:
-  type: openai
-  api_key: put-your-api-key-here
-vector_db:
-  type: pgvector
-  conn_str: put-your-connection-string-here
-embedder:
-  type: sentence
-  model: all-MiniLM-L6-v2
-anoymizer:
-  type: presidio
-  # this is an example key don't use in prod
-  key: WmZq4t7w!z%C&F)J
-  threshold: .5
-  entity_resolution: containment
-  pii_types:
-    - person
-    - email_address
+llm:
+  provider:
+    type: openai
+    default_model: gpt-3.5-turbo
+    api_key: <put-api-key-here>
+  anoymizer:
+    type: presidio
+    # don't use this key in production, it's just for testing
+    key: PmhPKHYyLzdvZQ==
+    threshold: .5
+    entity_resolution: containment
+    pii_types:
+      - person
+      - email_address
+  pre_processors:
+    remove_toxicity:
+      type: simple
+rag:
+  vector_db:
+    type: pgvector
+    conn_str: <put-conn-str-here>
+  embedder:
+    type: sentence
+    model: all-MiniLM-L6-v2
+  anoymizer:
+    type: presidio
+    key: WmZq4t7w!z%C&F)J
+    threshold: .5
+    entity_resolution: containment
+    pii_types:
+      - person
+      - email_address
 ```
 
 2. Create your virtual environment `python -m venv .venv`

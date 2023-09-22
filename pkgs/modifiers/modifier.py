@@ -26,6 +26,8 @@ class Modifier:
             for key in data:
                 if isinstance(data[key], (str, list, dict)):
                     data[key] = self.transform(data[key])
+        elif isinstance(data, Node):
+            data.content = self._transform(data.content)
         elif isinstance(data, list):
             assert data
             if isinstance(data[0], Node):
