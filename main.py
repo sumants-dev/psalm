@@ -1,4 +1,4 @@
-from fastapi import FastAPI 
+from fastapi import FastAPI
 from pkgs.config import setting
 from pkgs.orchestrator.orchestrator import build_orchestrator
 import yaml
@@ -7,7 +7,7 @@ import yaml
 app = FastAPI()
 
 try:
-    with open('pontus.yaml', 'r') as f:
+    with open("pontus.yaml", "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 except Exception as e:
     raise Exception("pontus.yaml not found")

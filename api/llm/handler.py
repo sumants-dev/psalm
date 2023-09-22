@@ -1,15 +1,31 @@
 import typing
 from fastapi import APIRouter
-from api.llm.models import ChatCompletionSecureRequest, ChatCompletionSecureResponse, DemoDocumentStoreRequest, DemoRAGRequest, DemoRAGResponse
+from api.llm.models import (
+    ChatCompletionSecureRequest,
+    ChatCompletionSecureResponse,
+    DemoDocumentStoreRequest,
+    DemoRAGRequest,
+    DemoRAGResponse,
+)
 
 from pkgs.models import pydantic_openai as models_openai
-from pkgs.modifiers.anonymity.presidio_anonymizer import PresidioAnonymizer, PresidioDeanonymizer, PII_Type, EntityResolution
+from pkgs.modifiers.anonymity.presidio_anonymizer import (
+    PresidioAnonymizer,
+    PresidioDeanonymizer,
+    PII_Type,
+    EntityResolution,
+)
 import openai
 
 from pkgs import Node
 from pkgs.loaders.wiki_loader import WikiLoader
 from pkgs.modifiers.stop_words.remove_stop_words import RemoveStopWords
-from pkgs.modifiers.anonymity.presidio_anonymizer import PresidioAnonymizer, PresidioDeanonymizer, PII_Type, EntityResolution
+from pkgs.modifiers.anonymity.presidio_anonymizer import (
+    PresidioAnonymizer,
+    PresidioDeanonymizer,
+    PII_Type,
+    EntityResolution,
+)
 from pkgs.chunkers.sentence_chunker import SentenceChunker
 from pkgs.embedders.sentence_embedder import SentenceEmbedder
 from pkgs.orchestrator import orchestrator
@@ -39,11 +55,8 @@ RAGSystemPrompt = (
 )
 
 RagSystemPromptMessage = ChatMessage(
-    role=ChatMessageRole.System, 
-    content=RAGSystemPrompt, 
-    name=None
+    role=ChatMessageRole.System, content=RAGSystemPrompt, name=None
 )
-
 
 
 @router.post("/chat/completions", tags=["llm"])
@@ -54,24 +67,26 @@ async def create_chat_completion(
 ) -> ChatCompletionSecureResponse:
     ai_orchestrator = orchestrator.get_orchestrator()
 
-    context_messages = [
-        retrieve_context(
-            ai_orchestrator,
-            chat_completion.context_prompt,
-            chat_completion.titles,
-        )
-    ] if enable_rag else []
+    context_messages = (
+        [
+            retrieve_context(
+                ai_orchestrator,
+                chat_completion.context_prompt,
+                chat_completion.titles,
+            )
+        ]
+        if enable_rag
+        else []
+    )
 
     msgs = [RagSystemPromptMessage] + chat_completion.messages + context_messages
 
-
     chat_response = ai_orchestrator.llm.call_llm(
-        model=chat_completion.model, 
+        model=chat_completion.model,
         msgs=msgs,
         options=chat_completion.options,
         debug=debug,
     )
-
 
     return ChatCompletionSecureResponse(
         messages=chat_response.messages,

@@ -14,10 +14,12 @@ class ChatMessageRole(str, Enum):
     Assistant = "assistant"
     Function = "function"
 
+
 class ChatCompletionMessage(BaseModel):
     role: ChatMessageRole
     content: str
     name: Optional[str] = Field(None, alias="name")
+
 
 class ChatCompletionRequest(BaseModel):
     model: str
@@ -33,10 +35,12 @@ class ChatCompletionRequest(BaseModel):
     logit_bias: Optional[Dict[str, int]] = Field(None, alias="logit_bias")
     user: Optional[str] = Field(None, alias="user")
 
+
 class ChatCompletionChoice(BaseModel):
     index: int
     message: ChatCompletionMessage
     finish_reason: str = Field(..., alias="finish_reason")
+
 
 class ChatCompletionResponse(BaseModel):
     id: str = Field(..., alias="id")

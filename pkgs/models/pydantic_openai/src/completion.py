@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from .common import Usage
 
+
 # GPT3 models provided by OpenAI for text-based tasks
 class GPT3Models(str, Enum):
     GPT432K0314 = "gpt-4-32k-0314"
@@ -30,16 +31,19 @@ class GPT3Models(str, Enum):
     GPT3Ada = "ada"
     GPT3Babbage = "babbage"
 
+
 # Codex models provided by OpenAI for code-specific tasks
 class CodexModel(str, Enum):
     CodexCodeDavinci002 = "code-davinci-002"
     CodexCodeCushman001 = "code-cushman-001"
     CodexCodeDavinci001 = "code-davinci-001"
 
+
 class PromptType:
     @staticmethod
     def checkPromptType(prompt: str | List[str] | typing.Any) -> bool:
         return isinstance(prompt, str) or isinstance(prompt, list)
+
 
 class CompletionRequest(BaseModel):
     model: str
@@ -59,17 +63,20 @@ class CompletionRequest(BaseModel):
     logit_bias: Optional[Dict[str, int]] = None
     user: Optional[str] = None
 
+
 class LogprobResult(BaseModel):
     tokens: List[str]
     token_logprobs: List[float]
     top_logprobs: List[Dict[str, float]]
     text_offset: List[int]
 
+
 class CompletionChoice(BaseModel):
     text: str
     index: int
     finish_reason: str
     logprobs: LogprobResult
+
 
 class CompletionResponse(BaseModel):
     id: str

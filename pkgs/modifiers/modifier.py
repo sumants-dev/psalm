@@ -5,6 +5,7 @@ from pkgs.models import pydantic_openai
 
 T = TypeVar("T")
 
+
 class Modifier:
     """
     Modifiers transform strings to other strings
@@ -45,10 +46,8 @@ class Modifier:
                     if isinstance(data[i], (str, list, dict)):
                         data[i] = self.transform(data[i])
         return data
-        
 
 
-        
 class MultiModifier(Modifier):
     def __init__(self, modifiers: List[Modifier]):
         self.modifiers = modifiers
@@ -57,7 +56,7 @@ class MultiModifier(Modifier):
         for modifier in self.modifiers:
             text = modifier._transform(text)
         return text
-    
+
     def transform(self, nodes: List[Node]):
         for modifier in self.modifiers:
             modifier.transform(nodes)

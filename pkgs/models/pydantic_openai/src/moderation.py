@@ -6,10 +6,11 @@ from typing import List, Optional
 from enum import Enum
 from pydantic import BaseModel, Field
 
+
 class ModerationModel(str, Enum):
     ModerationTextStable = "text-moderation-stable"
     ModerationTextLatest = "text-moderation-latest"
-    ModerationText001    = "text-moderation-001"
+    ModerationText001 = "text-moderation-001"
 
 
 class ModerationRequest(BaseModel):

@@ -1,4 +1,3 @@
-
 import enum
 
 from pydantic import BaseModel, validator
@@ -7,22 +6,28 @@ from pkgs.models.pontus.base import ProviderType
 from pkgs.modifiers.anonymity.anonymizer import EntityResolution, PII_Type
 from typing import List
 
+
 class VectorDBType(str, enum.Enum):
     pgvector = "pgvector"
+
 
 class VectorDBConfig(BaseModel):
     type: VectorDBType
     conn_str: str
 
+
 class EmbedderType(str, enum.Enum):
     sentence = "sentence"
+
 
 class EmbedderConfig(BaseModel):
     type: EmbedderType
     model: str
 
+
 class AnoymizerType(str, enum.Enum):
     presidio = "presidio"
+
 
 class AnoymizerEntityResolution(str, enum.Enum):
     containment = "containment"
@@ -33,7 +38,7 @@ class AnoymizerConfig(BaseModel):
     key: str
     threshold: float
     entity_resolution: EntityResolution
-    pii_types: list[PII_Type] 
+    pii_types: list[PII_Type]
 
     @validator("entity_resolution", pre=True)
     def entity_resolution_to_enum(cls, v):
@@ -45,30 +50,35 @@ class AnoymizerConfig(BaseModel):
         assert isinstance(v, list)
         return [pii_type.upper() for pii_type in v]
 
+
 class RemoveToxcityType(str, enum.Enum):
     simple = "simple"
+
 
 class RemoveToxcityProccessorConfig(BaseModel):
     type: RemoveToxcityType
 
+
 class ProcessorConfig(BaseModel):
     remove_toxicity: RemoveToxcityProccessorConfig | None = None
 
+
 class RagConfig(BaseModel):
     vector_db: VectorDBConfig
-    embedder: EmbedderConfig 
+    embedder: EmbedderConfig
     anoymizer: AnoymizerConfig | None = None
     pre_processors: ProcessorConfig | None = None
     post_processors: ProcessorConfig | None = None
+
 
 class ProviderConfig(BaseModel):
     type: ProviderType
     api_key: str
     default_model: str
-    
+
+
 class LLMConfig(BaseModel):
     provider: ProviderConfig
     anoymizer: AnoymizerConfig
     pre_processors: ProcessorConfig | None = None
     post_processors: ProcessorConfig | None = None
-

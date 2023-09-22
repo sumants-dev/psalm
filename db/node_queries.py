@@ -44,16 +44,25 @@ class Querier:
     def __init__(self, conn: sqlalchemy.engine.Connection):
         self._conn = conn
 
-    def get_nearest_nodes(self, *, embedding: Any, limit: int) -> Iterator[GetNearestNodesRow]:
-        result = self._conn.execute(sqlalchemy.text(GET_NEAREST_NODES), {"p1": embedding, "p2": limit})
+    def get_nearest_nodes(
+        self, *, embedding: Any, limit: int
+    ) -> Iterator[GetNearestNodesRow]:
+        result = self._conn.execute(
+            sqlalchemy.text(GET_NEAREST_NODES), {"p1": embedding, "p2": limit}
+        )
         for row in result:
             yield GetNearestNodesRow(
                 content=row[0],
                 distance=row[1],
             )
 
-    def get_nearest_nodes_given_condition(self, *, embedding: Any, limit: int, dollar_3: Any) -> Iterator[GetNearestNodesGivenConditionRow]:
-        result = self._conn.execute(sqlalchemy.text(GET_NEAREST_NODES_GIVEN_CONDITION), {"p1": embedding, "p2": limit, "p3": dollar_3})
+    def get_nearest_nodes_given_condition(
+        self, *, embedding: Any, limit: int, dollar_3: Any
+    ) -> Iterator[GetNearestNodesGivenConditionRow]:
+        result = self._conn.execute(
+            sqlalchemy.text(GET_NEAREST_NODES_GIVEN_CONDITION),
+            {"p1": embedding, "p2": limit, "p3": dollar_3},
+        )
         for row in result:
             yield GetNearestNodesGivenConditionRow(
                 content=row[0],
@@ -65,16 +74,25 @@ class AsyncQuerier:
     def __init__(self, conn: sqlalchemy.ext.asyncio.AsyncConnection):
         self._conn = conn
 
-    async def get_nearest_nodes(self, *, embedding: Any, limit: int) -> AsyncIterator[GetNearestNodesRow]:
-        result = await self._conn.stream(sqlalchemy.text(GET_NEAREST_NODES), {"p1": embedding, "p2": limit})
+    async def get_nearest_nodes(
+        self, *, embedding: Any, limit: int
+    ) -> AsyncIterator[GetNearestNodesRow]:
+        result = await self._conn.stream(
+            sqlalchemy.text(GET_NEAREST_NODES), {"p1": embedding, "p2": limit}
+        )
         async for row in result:
             yield GetNearestNodesRow(
                 content=row[0],
                 distance=row[1],
             )
 
-    async def get_nearest_nodes_given_condition(self, *, embedding: Any, limit: int, dollar_3: Any) -> AsyncIterator[GetNearestNodesGivenConditionRow]:
-        result = await self._conn.stream(sqlalchemy.text(GET_NEAREST_NODES_GIVEN_CONDITION), {"p1": embedding, "p2": limit, "p3": dollar_3})
+    async def get_nearest_nodes_given_condition(
+        self, *, embedding: Any, limit: int, dollar_3: Any
+    ) -> AsyncIterator[GetNearestNodesGivenConditionRow]:
+        result = await self._conn.stream(
+            sqlalchemy.text(GET_NEAREST_NODES_GIVEN_CONDITION),
+            {"p1": embedding, "p2": limit, "p3": dollar_3},
+        )
         async for row in result:
             yield GetNearestNodesGivenConditionRow(
                 content=row[0],
