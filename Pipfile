@@ -19,6 +19,8 @@ sentence-transformers = "*"
 guidance = "*"
 psycopg2-binary = "*"
 requests = "*"
+passlib = {extras = ["bycrypt"], version = "*"}
+bcrypt = "*"
 
 [dev-packages]
 mypy = "*"

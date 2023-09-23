@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi import security
 from api.llm.models import (
     ChatCompletionSecureRequest,
     ChatCompletionSecureResponse,
@@ -34,14 +36,22 @@ RagSystemPromptMessage = ChatMessage(
     role=ChatMessageRole.System, content=RAGSystemPrompt, name=None
 )
 
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
+security = HTTPBasic(auto_error=False)
+
 
 @router.post("/chat/completions", tags=["llm"])
 async def create_chat_completion(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     chat_completion: ChatCompletionSecureRequest,
     enable_rag: bool = False,
     debug: bool = False,
 ) -> ChatCompletionSecureResponse:
     ai_orchestrator = orchestrator.get_orchestrator()
+
+    if not ai_orchestrator.application.auth.authenticate(credentials=credentials):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
     cache_hit = get_cache(ai_orchestrator, chat_completion.key_cache_prompt)
 

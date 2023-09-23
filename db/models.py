@@ -2,12 +2,21 @@
 # versions:
 #   sqlc v1.21.0
 import dataclasses
-from typing import Any
+import datetime
+import enum
+
+
+class Roletype(str, enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
 
 
 @dataclasses.dataclass()
-class Node:
+class PontusApiKey:
     id: int
-    content: str
-    metadata: Any
-    embedding: Any
+    username: str
+    password: str
+    role: Roletype
+    enabled: bool
+    created_at: datetime.datetime
+    updated_at: datetime.datetime

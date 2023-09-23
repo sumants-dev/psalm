@@ -3,10 +3,10 @@ dev:
 gen:
 	sqlc generate
 migration:
-	goose create $(name) sql
+	goose create $(name) sql --dir migrations
 up:
 	goose up
 up_by_one:
 	goose 
 down_by_one:
-	goose down
+	goose postgres $(database_url) down

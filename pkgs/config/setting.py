@@ -6,6 +6,7 @@ from pkgs.models.pontus.base import ProviderType
 from pkgs.modifiers.anonymity.anonymizer import EntityResolution, PII_Type
 from pkgs.orchestrator.config import (
     AnoymizerConfig,
+    ApplicationConfig,
     EmbedderConfig,
     LLMConfig,
     ProviderConfig,
@@ -19,6 +20,7 @@ class Settings(BaseModel):
     version: str
     llm: LLMConfig
     rag: RagConfig
+    application: ApplicationConfig
 
 
 settings: Settings | None = None

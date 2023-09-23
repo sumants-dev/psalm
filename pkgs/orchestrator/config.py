@@ -96,3 +96,28 @@ class LLMConfig(BaseModel):
     pre_processors: ProcessorConfig | None = None
     post_processors: ProcessorConfig | None = None
     cache: CacheConfig | None = None
+
+
+class DatabaseType(str, enum.Enum):
+    postgres = "postgres"
+
+
+class DatabaseConfig(BaseModel):
+    type: DatabaseType = DatabaseType.postgres
+    conn_str: str
+
+
+class AuthType(str, enum.Enum):
+    api_key = "api_key"
+    no_auth = "no_auth"
+
+
+class AuthConfig(BaseModel):
+    type: AuthType = AuthType.no_auth
+    default_admin_username: str | None = None
+    default_admin_api_key: str | None = None
+
+
+class ApplicationConfig(BaseModel):
+    database: DatabaseConfig
+    authentication: AuthConfig | None = None

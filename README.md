@@ -21,6 +21,14 @@
 1. Create the following configuration file `pontus.yaml`
 ```yaml
 version: "0.1"
+application:
+  database:
+    type: postgres
+    conn_str: postgresql://postgres:postgres@localhost:5435/pontus
+  authentication:
+    type: api_key
+    default_admin_username: admin
+    default_admin_api_key: "1234"
 llm:
   provider:
     type: openai
@@ -29,22 +37,35 @@ llm:
   anoymizer:
     type: presidio
     # don't use this key in production, it's just for testing
-    key: PmhPKHYyLzdvZQ==
+    key: WmZq4t7w!z%C&F)J
     threshold: .5
     entity_resolution: containment
     pii_types:
       - person
       - email_address
+  cache:
+    type: small_cache
+    vector_db:
+      type: pgvector
+      conn_str: <put-conn-str>
+      collection_name: prompt_cache
+    embedder:
+      type: sentence
+      model: all-MiniLM-L6-v2
+      max_length: 256
+
   pre_processors:
-    remove_toxicity:
+    remove_toxcity:
       type: simple
 rag:
   vector_db:
     type: pgvector
-    conn_str: <put-conn-str-here>
+    conn_str: <put-conn-str>
+    collection_name: node
   embedder:
     type: sentence
     model: all-MiniLM-L6-v2
+    max_length: 256
   anoymizer:
     type: presidio
     key: WmZq4t7w!z%C&F)J

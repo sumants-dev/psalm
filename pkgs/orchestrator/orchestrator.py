@@ -1,6 +1,12 @@
+from fastapi.security import HTTPBasicCredentials
 from pkgs import Node
+from pkgs.application.application import Application
+from pkgs.auth.api_key_auth import ApiKeyAuth
+from pkgs.auth.auth import Auth
+from pkgs.auth.no_auth import NoAuth
 from pkgs.cache.caching import PromptCache
 from pkgs.cache.vector_cache import SmallPromptCache
+from pkgs.db.sql_db import SQLDB
 from pkgs.embedders.embedder import Embedder
 from pkgs.embedders.sentence_embedder import SentenceEmbedder
 from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
@@ -24,7 +30,7 @@ from typing import TypeVar, List, Dict, Any
 
 
 import openai
-from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, CacheConfig, CacheType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, RagConfig, VectorDBConfig, VectorDBType
+from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, ApplicationConfig, AuthConfig, AuthType, CacheConfig, CacheType, DatabaseConfig, DatabaseType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, RagConfig, VectorDBConfig, VectorDBType
 from pkgs.vector_dbs.pg_vector_store import PgVectorStore
 
 from pkgs.vector_dbs.vector_db import VectorDB
@@ -201,12 +207,16 @@ class LLM:
 class Orchestrator:
     llm: LLM
     rag: Rag
+    application: Application
 
     def set_llm(self, llm: LLM) -> None:
         self.llm = llm
     
     def set_rag(self, rag: Rag) -> None:
         self.rag = rag
+    
+    def set_application(self, application: Application) -> None:
+        self.application = application
 
 orchestrator = Orchestrator()
 
@@ -214,6 +224,12 @@ orchestrator = Orchestrator()
 def build_orchestrator():
     settings = getSettings()
 
+    sql_db = _build_db(settings.application.database) if settings.application.database else None
+    auth = _build_auth(settings.application.authentication, sql_db=sql_db) 
+    app = Application(
+        auth=auth,
+        sql_db=sql_db, 
+    )
     rag_anoymizer = _build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None
     rag_deanoymizer = _build_deanoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None
     llm = LLM(
@@ -241,6 +257,7 @@ def build_orchestrator():
 
     orchestrator.set_llm(llm)
     orchestrator.set_rag(rag)
+    orchestrator.set_application(app)
 
 def _build_cache(config: CacheConfig, anoymizer: Anonymizer | None = None, deanonimyzer: Deanonymizer | None = None) -> PromptCache | None:
     match (config.type):
@@ -307,6 +324,35 @@ def _build_deanoymizer(config: AnoymizerConfig) -> Deanonymizer:
             )
         case _:
             raise Exception("Anonymizer not supported")
+
+def _build_db(config: DatabaseConfig):
+    match (config.type):
+        case DatabaseType.postgres:
+            return SQLDB(
+                conn_str=config.conn_str
+            )
+        case _:
+            raise Exception("DB not supported")
+
+
+
+def _build_auth(config: AuthConfig | None = None, sql_db: SQLDB | None  = None) -> Auth:
+    if config is None:
+        return NoAuth()
+    
+    match (config.type):
+        case AuthType.api_key:
+            assert sql_db is not None, "SQL DB must be set for api key auth"
+            default_credentials = HTTPBasicCredentials(
+                username=config.default_admin_username or "admin",
+                password=config.default_admin_api_key or "admin",
+            )
+            return ApiKeyAuth(
+                sql_db=sql_db,
+                default_admin_credentials=default_credentials,
+            )
+        case _:
+            return NoAuth()
 
 def get_orchestrator():
     return orchestrator
