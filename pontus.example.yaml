@@ -13,19 +13,29 @@ llm:
     pii_types:
       - person
       - email_address
-  pre_processors:
-    remove_toxcity:
-      type: simple
+  cache:
+    type: small_cache
+    vector_db:
+      type: pgvector
+      conn_str: <put-conn-str-here>
+      collection_name: prompt_cache
+    embedder:
+      type: sentence
+      model: all-MiniLM-L6-v2
+      max_length: 256
 rag:
   vector_db:
     type: pgvector
     conn_str: <put-conn-str-here>
+    collection_name: node
   embedder:
     type: sentence
     model: all-MiniLM-L6-v2
+    max_length: 256
   anoymizer:
     type: presidio
-    key: PmhPKHYyLzdvZQ==
+    # don't use this key in production, it's just for testing
+    key: WmZq4t7w!z%C&F)J
     threshold: .5
     entity_resolution: containment
     pii_types:

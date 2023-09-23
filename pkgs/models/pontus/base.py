@@ -67,7 +67,7 @@ class OpenAIOptions(TypedDict):
 
 class ChatResponse(BaseModel):
     messages: List[ChatMessage]
-    deanoymized_provider_response: ChatCompletionResponse
+    provider_response: ChatCompletionResponse
     raw_provider_response: ChatCompletionResponse | None = None
 
 

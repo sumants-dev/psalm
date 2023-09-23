@@ -1,4 +1,6 @@
 from pkgs import Node
+from pkgs.cache.caching import PromptCache
+from pkgs.cache.vector_cache import SmallPromptCache
 from pkgs.embedders.embedder import Embedder
 from pkgs.embedders.sentence_embedder import SentenceEmbedder
 from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
@@ -22,7 +24,7 @@ from typing import TypeVar, List, Dict, Any
 
 
 import openai
-from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, VectorDBConfig, VectorDBType
+from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, CacheConfig, CacheType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, RagConfig, VectorDBConfig, VectorDBType
 from pkgs.vector_dbs.pg_vector_store import PgVectorStore
 
 from pkgs.vector_dbs.vector_db import VectorDB
@@ -35,8 +37,11 @@ T = TypeVar("T")
 
 
 class Rag:
+    config: RagConfig
+
     def __init__(
         self,
+        config: RagConfig,
         vector_db: VectorDB,
         embedder: Embedder,
         anoymizer: Anonymizer | None,
@@ -44,6 +49,7 @@ class Rag:
         pre_processors: List[Modifier] = [],
         post_processors: List[Modifier] = [],
     ) -> None:
+        self.config = config
         self._vector_db = vector_db
         self._embedder = embedder
         self.pre_processors = pre_processors
@@ -82,14 +88,14 @@ class Rag:
     def embedder(self) -> Embedder:
         return self._embedder
 
-    def find_context_nodes(self, nodes: List[Node], max_nodes: int = 5) -> List[Node]:
+    def find_context_nodes(self, nodes: List[Node], collection: str, max_nodes: int = 5) -> List[Node]:
         similar_nodes = []
         if self.vector_db:
             similar_nodes = [
                 similar_node
                 for node in nodes
                 for similar_node, distance in self.vector_db.find_similar_nodes(
-                    node, "Node", max_nodes=max_nodes
+                    node, collection=collection, max_nodes=max_nodes
                 )
             ]
         return similar_nodes
@@ -105,6 +111,7 @@ class LLM:
         provider: ProviderConfig,
         anonymizer: Anonymizer | None = None,
         deanoymizer: Deanonymizer | None = None,
+        cache: PromptCache | None = None,
         pre_processors: List[Modifier] = [],
         post_processors: List[Modifier] = [],
     ) -> None:
@@ -112,8 +119,11 @@ class LLM:
         self.provider = provider
         self._anoymizer = anonymizer
 
+        self.cache = cache
+
         self.pre_processors = pre_processors
         self.post_processors = post_processors
+
 
         if anonymizer:
             self.pre_processors.append(anonymizer)
@@ -183,7 +193,7 @@ class LLM:
 
         return ChatResponse(
             raw_provider_response=orginal_open_ai_res,
-            deanoymized_provider_response=open_ai_res,
+            provider_response=open_ai_res,
             messages=post_processed_msgs,
         )
 
@@ -204,16 +214,23 @@ orchestrator = Orchestrator()
 def build_orchestrator():
     settings = getSettings()
 
-
+    rag_anoymizer = _build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None
+    rag_deanoymizer = _build_deanoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None
     llm = LLM(
         provider=settings.llm.provider,
-        anonymizer=_build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
-        deanoymizer=_build_deanoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
+        cache=_build_cache(
+            settings.llm.cache,
+            anoymizer=rag_anoymizer,
+            deanonimyzer=rag_deanoymizer
+        ) if settings.llm.cache else None,
+        anonymizer=rag_anoymizer,
+        deanoymizer=rag_deanoymizer,
         pre_processors=_build_processors(settings.rag.pre_processors) if settings.rag.pre_processors else [],
         post_processors=_build_processors(settings.rag.post_processors) if settings.rag.post_processors else [],
     )
 
     rag = Rag(
+        config=settings.rag,
         vector_db=_build_vector_db(settings.rag.vector_db) ,
         embedder=_build_embedder(settings.rag.embedder),
         anoymizer=_build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
@@ -224,6 +241,21 @@ def build_orchestrator():
 
     orchestrator.set_llm(llm)
     orchestrator.set_rag(rag)
+
+def _build_cache(config: CacheConfig, anoymizer: Anonymizer | None = None, deanonimyzer: Deanonymizer | None = None) -> PromptCache | None:
+    match (config.type):
+        case CacheType.small_cache:
+            assert config.vector_db is not None
+            assert config.embedder is not None
+            return SmallPromptCache(
+                vector_db=_build_vector_db(config.vector_db),
+                embedder=_build_embedder(config.embedder),
+                anoymizer=anoymizer,
+                deanonimyzer=deanonimyzer,
+                expiry_in_seconds=config.expiry_in_seconds,
+            )
+        case _:
+            return None
 
 def _build_processors(config: ProcessorConfig) -> List[Modifier]:
     processors: List[Modifier] = []
@@ -238,7 +270,8 @@ def _build_embedder(config: EmbedderConfig) -> Embedder:
     match (config.type):
         case EmbedderType.sentence:
             return SentenceEmbedder(
-                model_name=config.model
+                model_name=config.model,
+                max_length=config.max_length,
             )
         case _:
             raise Exception("Embedder not supported")

@@ -14,6 +14,7 @@ class VectorDBType(str, enum.Enum):
 class VectorDBConfig(BaseModel):
     type: VectorDBType
     conn_str: str
+    collection_name: str = "Node"
 
 
 class EmbedderType(str, enum.Enum):
@@ -23,6 +24,7 @@ class EmbedderType(str, enum.Enum):
 class EmbedderConfig(BaseModel):
     type: EmbedderType
     model: str
+    max_length: int
 
 
 class AnoymizerType(str, enum.Enum):
@@ -77,8 +79,20 @@ class ProviderConfig(BaseModel):
     default_model: str
 
 
+class CacheType(str, enum.Enum):
+    small_cache = "small_cache"
+
+
+class CacheConfig(BaseModel):
+    type: CacheType
+    vector_db: VectorDBConfig | None = None
+    embedder: EmbedderConfig | None = None
+    expiry_in_seconds: int = 60 * 60 * 24 * 7
+
+
 class LLMConfig(BaseModel):
     provider: ProviderConfig
     anoymizer: AnoymizerConfig
     pre_processors: ProcessorConfig | None = None
     post_processors: ProcessorConfig | None = None
+    cache: CacheConfig | None = None

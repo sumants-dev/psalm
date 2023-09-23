@@ -1,42 +1,18 @@
-import typing
 from fastapi import APIRouter
 from api.llm.models import (
     ChatCompletionSecureRequest,
     ChatCompletionSecureResponse,
-    DemoDocumentStoreRequest,
-    DemoRAGRequest,
-    DemoRAGResponse,
 )
+from pkgs.cache.caching import PromptCacheRecord
 
-from pkgs.models import pydantic_openai as models_openai
-from pkgs.modifiers.anonymity.presidio_anonymizer import (
-    PresidioAnonymizer,
-    PresidioDeanonymizer,
-    PII_Type,
-    EntityResolution,
-)
-import openai
 
-from pkgs import Node
-from pkgs.loaders.wiki_loader import WikiLoader
-from pkgs.modifiers.stop_words.remove_stop_words import RemoveStopWords
-from pkgs.modifiers.anonymity.presidio_anonymizer import (
-    PresidioAnonymizer,
-    PresidioDeanonymizer,
-    PII_Type,
-    EntityResolution,
-)
-from pkgs.chunkers.sentence_chunker import SentenceChunker
-from pkgs.embedders.sentence_embedder import SentenceEmbedder
 from pkgs.orchestrator import orchestrator
 
 from pkgs.models.pontus.base import ChatMessage, ChatMessageRole
-from pkgs.vector_dbs.pg_vector_store import PgVectorStore
-from pkgs.llm.guidance import LLM, ModelProvider
 
-from pkgs.config.setting import Settings, getSettings
+from pkgs.config.setting import getSettings
 
-from api.llm.helpers import retrieve_context
+from api.llm.helpers import get_cache, retrieve_context
 
 settings = getSettings()
 
@@ -67,14 +43,17 @@ async def create_chat_completion(
 ) -> ChatCompletionSecureResponse:
     ai_orchestrator = orchestrator.get_orchestrator()
 
+    cache_hit = get_cache(ai_orchestrator, chat_completion.key_cache_prompt)
+
+    if cache_hit:
+        return cache_hit
+
     context_messages = (
-        [
-            retrieve_context(
-                ai_orchestrator,
-                chat_completion.context_prompt,
-                chat_completion.titles,
-            )
-        ]
+        retrieve_context(
+            ai_orchestrator,
+            chat_completion.context_prompt,
+            chat_completion.titles,
+        )
         if enable_rag
         else []
     )
@@ -88,9 +67,18 @@ async def create_chat_completion(
         debug=debug,
     )
 
+    if chat_completion.key_cache_prompt and ai_orchestrator.llm.cache:
+        ai_orchestrator.llm.cache.set(
+            prompt=chat_completion.key_cache_prompt,
+            record=PromptCacheRecord(
+                messages=chat_response.messages,
+                provider_response=chat_response.provider_response,
+            ),
+        )
+
     return ChatCompletionSecureResponse(
         messages=chat_response.messages,
-        deanoymized_provider_response=chat_response.deanoymized_provider_response,
+        provider_response=chat_response.provider_response,
         raw_provider_response=chat_response.raw_provider_response,
         raw_request=msgs if debug else None,
     )

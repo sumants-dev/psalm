@@ -49,7 +49,7 @@ RagSystemPromptMessage = ChatMessage(
 loader = WikiLoader()
 rm_stopwords = RemoveStopWords()
 sentence_chunker = SentenceChunker(2, 256)
-sentence_embedder = SentenceEmbedder("all-MiniLM-L6-v2")
+sentence_embedder = SentenceEmbedder("all-MiniLM-L6-v2", 256)
 containment_anonymizer = PresidioAnonymizer(
     settings.llm.anoymizer.key,
     0.5,

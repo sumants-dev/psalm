@@ -40,6 +40,7 @@ class ChatCompletionSecureRequest(pydantic.BaseModel):
     messages: typing.List[ChatMessage]
     titles: typing.List[str] = []
     context_prompt: str = ""
+    key_cache_prompt: str | None = None
     options: OpenAIOptions | None = None
 
 

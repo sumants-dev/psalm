@@ -3,6 +3,9 @@ from pkgs import Node
 
 
 class Embedder:
+    max_length: int
+    output_dim: int
+
     def _embed(self, chunks: List[str]) -> List[List[float]]:
         """
         Produce a vector embedding for every chunk
