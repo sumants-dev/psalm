@@ -119,5 +119,5 @@ class AuthConfig(BaseModel):
 
 
 class ApplicationConfig(BaseModel):
-    database: DatabaseConfig
+    database: DatabaseConfig | None = None
     authentication: AuthConfig | None = None
