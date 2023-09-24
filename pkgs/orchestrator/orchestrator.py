@@ -59,7 +59,7 @@ class Rag:
         anoymizer: Anonymizer | None,
         deanoymizer: Deanonymizer | None,
         population: Population | None = None,
-        chunker: Chunker = SentenceChunker(2, 256), # TODO: make this configurable
+        chunker: Chunker = SentenceChunker(min_chunk_length=2, max_chunk_length=256), # TODO: make this configurable
         pre_processors: List[Modifier] = [],
         post_processors: List[Modifier] = [],
     ) -> None:
@@ -83,13 +83,13 @@ class Rag:
     def pre_process(self, data: T) -> T:
         t_data = data
         for modifier in self.pre_processors:
-            modifier.transform(t_data)
+            modifier.transform(data=t_data)
         return t_data
 
     def post_process(self, data: T) -> T:
         t_data = data
         for modifier in self.post_processors:
-            modifier.transform(t_data)
+            modifier.transform(data=t_data)
         return t_data
     
     @property
@@ -111,7 +111,7 @@ class Rag:
                 similar_node
                 for node in nodes
                 for similar_node, distance in self.vector_collection.find_similar_nodes(
-                    node, max_nodes=max_nodes
+                    node=node, max_nodes=max_nodes
                 )
             ]
         return similar_nodes
@@ -169,13 +169,13 @@ class LLM:
     def pre_process(self, data: T) -> T:
         t_data = data
         for modifier in self.pre_processors:
-            t_data = modifier.transform(data)
+            t_data = modifier.transform(data=data)
         return t_data
 
     def post_process(self, data: T) -> T:
         t_data = data
         for modifier in self.post_processors:
-            t_data = modifier.transform(data)
+            t_data = modifier.transform(data=data)
         return t_data
 
     def _call_openai(
@@ -187,7 +187,7 @@ class LLM:
     ) -> ChatResponse:
         self.openai.api_key = self.provider.api_key
         opts = opts or {}
-        transformed_msgs = self.pre_process(msgs)
+        transformed_msgs = self.pre_process(data=msgs)
 
         res: Dict[str, Any] = self.openai.ChatCompletion.create(
             model=model,
@@ -198,14 +198,14 @@ class LLM:
         open_ai_res = pydantic_openai.ChatCompletionResponse(**res)
 
         processed_msgs = [
-            ChatMessage.from_openai_message(res.message) for res in open_ai_res.choices
+            ChatMessage.from_openai_message(message=res.message) for res in open_ai_res.choices
         ]
 
-        post_processed_msgs = self.post_process(processed_msgs)
+        post_processed_msgs = self.post_process(data=processed_msgs)
 
-        orginal_open_ai_res = deepcopy(open_ai_res) if debug else None
+        orginal_open_ai_res = deepcopy(x=open_ai_res) if debug else None
 
-        open_ai_res.choices = self.post_process(open_ai_res.choices)
+        open_ai_res.choices = self.post_process(data=open_ai_res.choices)
 
         return ChatResponse(
             raw_provider_response=orginal_open_ai_res,
@@ -299,7 +299,7 @@ def _build_cache(config: CacheConfig, anoymizer: Anonymizer | None = None, deano
             assert config.vector_collection is not None
             assert config.embedder is not None
             return SmallPromptCache(
-                vector_collection=_build_vector_collection(config.vector_collection, include_metadata=False),
+                vector_collection=_build_vector_collection(config.vector_collection, include_metadata=True),
                 embedder=_build_embedder(config.embedder),
                 anoymizer=anoymizer,
                 deanonimyzer=deanonimyzer,

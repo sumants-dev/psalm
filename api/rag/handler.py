@@ -37,9 +37,8 @@ def start_loader(credentials: Annotated[HTTPBasicCredentials, Depends(security)]
     ai_orchestrator.rag.embedder.embed(nodes)
     transformed_nodes = ai_orchestrator.rag.pre_process(nodes)
 
-    ai_orchestrator.rag.vector_db.save_nodes(
+    ai_orchestrator.rag.vector_collection.save_nodes(
         nodes=transformed_nodes,
-        collection=ai_orchestrator.rag.config.vector_db.collection_name,
     )
 
 
@@ -70,7 +69,6 @@ def load(
     ai_orchestrator.rag.embedder.embed(nodes)
     transformed_nodes = ai_orchestrator.rag.pre_process(nodes)
 
-    ai_orchestrator.rag.vector_db.save_nodes(
+    ai_orchestrator.rag.vector_collection.save_nodes(
         nodes=transformed_nodes,
-        collection=ai_orchestrator.rag.config.vector_db.collection_name,
     )

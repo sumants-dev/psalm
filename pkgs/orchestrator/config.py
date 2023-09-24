@@ -91,7 +91,7 @@ class RagDataPopulationConfig(BaseModel):
 
 
 class RagConfig(BaseModel):
-    vector_db: VectorDBConfig
+    vector_collection: VectorCollectionConfig
     population: RagDataPopulationConfig | None = None
     embedder: EmbedderConfig
     anoymizer: AnoymizerConfig | None = None

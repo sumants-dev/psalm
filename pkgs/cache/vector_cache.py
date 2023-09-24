@@ -68,17 +68,16 @@ class SmallPromptCache(PromptCache):
         ]
         self.embedder.embed(nodes)
         self._pre_process(nodes)
-        self.vector_collection.save_nodes(nodes=nodes, collection=self.collection)
+        self.vector_collection.save_nodes(nodes=nodes)
         return True
 
     def get(self, prompt: str) -> PromptCacheRecord | None:
-        t_prompt = self._pre_process(prompt)
+        t_prompt = self._pre_process(data=prompt)
 
         node = [Node(content=t_prompt, metadata={}, embedding=None)]
-        self.embedder.embed(node)
+        self.embedder.embed(nodes=node)
 
         cache_lookup = self.vector_collection.find_similar_nodes(
-            collection=self.collection,
             node=node[0],
             max_nodes=1,
         )
@@ -96,9 +95,9 @@ class SmallPromptCache(PromptCache):
             and cache_hit.created_at + timedelta(seconds=self.expiry_in_seconds)
             < datetime.now()
         ):
-            self.vector_collection.delete_node(cache_hit, collection=self.collection)
+            self.vector_collection.delete_node(node=cache_hit)
             return None
 
-        deanomymized_cache = self._post_process(cache_hit)
+        deanomymized_cache = self._post_process(data=cache_hit)
         d = json.loads(deanomymized_cache.metadata["cache"])
         return PromptCacheRecord(**d)

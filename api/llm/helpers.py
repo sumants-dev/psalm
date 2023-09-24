@@ -20,7 +20,6 @@ def retrieve_context(
 
     similar_nodes = orchestrator.rag.find_context_nodes(
         nodes,
-        collection=orchestrator.rag.config.vector_db.collection_name,
         max_nodes=5,
     )
 

@@ -65,7 +65,7 @@ equality_anonymizer = PresidioAnonymizer(
 )
 deanonimyzer = PresidioDeanonymizer(settings.llm.anoymizer.key)
 
-db_engine = create_engine(settings.rag.vector_db.conn_str)
+db_engine = create_engine(settings.rag.vector_collection.conn_str)
 vector_collection = PgVectorCollection(db_engine, "Node", 384)
 llm = LLM(
     ModelProvider.OpenAI, "text-davinci-003", api_key=settings.llm.provider.api_key

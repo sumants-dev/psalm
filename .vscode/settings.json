@@ -1,0 +1,6 @@
+{
+    "python.languageServer": "Pylance",
+    "python.missingPackage.severity": "Warning",
+    "python.analysis.inlayHints.callArgumentNames": "partial",
+    "python.analysis.typeCheckingMode": "basic"
+}

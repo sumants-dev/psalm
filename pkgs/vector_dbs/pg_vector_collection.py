@@ -22,7 +22,8 @@ class PgVectorCollection(VectorCollection):
         self.include_metadata = include_metadata
         assert vector_dimension > 0, "Vectors must have non-negative dimension"
         self.dim = vector_dimension
-
+        self.is_queryable = True
+        
         if self.include_metadata:
             COLLECTION_SQL = f"""
                 CREATE TABLE IF NOT EXISTS Pontus.{self.collection} (
@@ -35,7 +36,7 @@ class PgVectorCollection(VectorCollection):
             """
 
             INDEX_SQL = f"""
-                CREATE INDEX ix_{self.collection} ON Pontus.{self.collection} USING gin (metadata jsonb_path_ops);
+                CREATE INDEX IF NOT EXISTS ix_{self.collection} ON Pontus.{self.collection} USING gin (metadata jsonb_path_ops);
             """
         else:
             COLLECTION_SQL = f"""
@@ -52,13 +53,14 @@ class PgVectorCollection(VectorCollection):
             """
 
         try:
-            self.execute("CREATE SCHEMA IF NOT EXISTS Pontus")
-            self.execute(COLLECTION_SQL)
-            self.execute(INDEX_SQL)
-        except:
-            raise Exception(f"Failed to initialize PgVectorCollection {self.collection}")
-        
-        self.is_queryable = True
+            self.execute(cmd="CREATE SCHEMA IF NOT EXISTS Pontus")
+            self.execute(cmd=COLLECTION_SQL)
+        except Exception as e:
+            raise Exception(f"Failed to initialize PgVectorCollection {self.collection}, \n{e}")
+        try: 
+            self.execute(cmd=INDEX_SQL)
+        except Exception as e:
+            print("Bypassing index creation")
 
     def _sanitize_collection(self, collection: str) -> str:
         """
@@ -77,20 +79,21 @@ class PgVectorCollection(VectorCollection):
 
         with self.engine.connect() as conn:
             if parameters:
-                conn.exec_driver_sql(cmd, parameters=parameters)
+                conn.exec_driver_sql(statement=cmd, parameters=parameters)
             else:
-                conn.exec_driver_sql(cmd)
+                conn.exec_driver_sql(statement=cmd)
 
             conn.commit()
 
     def save_nodes(self, nodes: List[Node]):
         def serialize_node(node: Node) -> Dict:
-            serialized_node = {
+            serialized_nd = {
                 "content": node.content,
                 "embedding": dumps(node.embedding)
             }
             if self.include_metadata:
-                serialized_node["metadata"] = dumps(node.metadata)
+                serialized_nd["metadata"] = dumps(node.metadata)
+            return serialized_nd
 
         serialized_nodes = [
             serialize_node(node)
