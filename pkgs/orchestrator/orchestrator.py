@@ -25,15 +25,15 @@ from pkgs.models.pontus.base import (
 )
 
 from copy import deepcopy
-
+from sqlalchemy import create_engine
 from typing import TypeVar, List, Dict, Any
 
 
 import openai
-from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, ApplicationConfig, AuthConfig, AuthType, CacheConfig, CacheType, DatabaseConfig, DatabaseType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, RagConfig, VectorDBConfig, VectorDBType
-from pkgs.vector_dbs.pg_vector_store import PgVectorStore
+from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, ApplicationConfig, AuthConfig, AuthType, CacheConfig, CacheType, DatabaseConfig, DatabaseType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, RagConfig, VectorDBConfig, VectorCollectionConfig, VectorDBType
+from pkgs.vector_dbs.pg_vector_collection import PgVectorCollection
 
-from pkgs.vector_dbs.vector_db import VectorDB
+from pkgs.vector_dbs.vector_collection import VectorCollection
 from pkgs.config.setting import (
     getSettings,
 )
@@ -48,7 +48,7 @@ class Rag:
     def __init__(
         self,
         config: RagConfig,
-        vector_db: VectorDB,
+        vector_collection: VectorCollection,
         embedder: Embedder,
         anoymizer: Anonymizer | None,
         deanoymizer: Deanonymizer | None,
@@ -56,7 +56,7 @@ class Rag:
         post_processors: List[Modifier] = [],
     ) -> None:
         self.config = config
-        self._vector_db = vector_db
+        self._vector_collection = vector_collection
         self._embedder = embedder
         self.pre_processors = pre_processors
         self.post_processors = post_processors
@@ -87,21 +87,21 @@ class Rag:
         return self._anoymizer
 
     @property
-    def vector_db(self) -> VectorDB:
-        return self._vector_db
+    def vector_collection(self) -> VectorCollection:
+        return self._vector_collection
 
     @property
     def embedder(self) -> Embedder:
         return self._embedder
 
-    def find_context_nodes(self, nodes: List[Node], collection: str, max_nodes: int = 5) -> List[Node]:
+    def find_context_nodes(self, nodes: List[Node], max_nodes: int = 5) -> List[Node]:
         similar_nodes = []
-        if self.vector_db:
+        if self.vector_collection:
             similar_nodes = [
                 similar_node
                 for node in nodes
-                for similar_node, distance in self.vector_db.find_similar_nodes(
-                    node, collection=collection, max_nodes=max_nodes
+                for similar_node, distance in self.vector_collection.find_similar_nodes(
+                    node, max_nodes=max_nodes
                 )
             ]
         return similar_nodes
@@ -247,7 +247,7 @@ def build_orchestrator():
 
     rag = Rag(
         config=settings.rag,
-        vector_db=_build_vector_db(settings.rag.vector_db) ,
+        vector_collection=_build_vector_collection(settings.rag.vector_collection) ,
         embedder=_build_embedder(settings.rag.embedder),
         anoymizer=_build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
         deanoymizer=_build_deanoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
@@ -262,10 +262,10 @@ def build_orchestrator():
 def _build_cache(config: CacheConfig, anoymizer: Anonymizer | None = None, deanonimyzer: Deanonymizer | None = None) -> PromptCache | None:
     match (config.type):
         case CacheType.small_cache:
-            assert config.vector_db is not None
+            assert config.vector_collection is not None
             assert config.embedder is not None
             return SmallPromptCache(
-                vector_db=_build_vector_db(config.vector_db),
+                vector_collection=_build_vector_collection(config.vector_collection, include_metadata=False),
                 embedder=_build_embedder(config.embedder),
                 anoymizer=anoymizer,
                 deanonimyzer=deanonimyzer,
@@ -294,12 +294,19 @@ def _build_embedder(config: EmbedderConfig) -> Embedder:
             raise Exception("Embedder not supported")
     
 
-def _build_vector_db(config: VectorDBConfig) -> VectorDB:
+def _build_vector_db(config: VectorDBConfig) -> Any:
     match (config.type):
         case VectorDBType.pgvector:
-            return PgVectorStore(
-                cnxn_string=config.conn_str
-            )
+            return create_engine(url = config.conn_str, pool_size = config.pool_size)
+        case _:
+            raise Exception("Vector DB not supported")
+        
+
+def _build_vector_collection(config: VectorCollectionConfig, include_metadata: bool = True) -> VectorCollection:
+    db_engine = _build_vector_db(config)
+    match(config.type):
+        case VectorDBType.pgvector:
+            return PgVectorCollection(db_engine, config.collection_name, config.vector_dimension, include_metadata)
         case _:
             raise Exception("Vector DB not supported")
 
@@ -329,7 +336,7 @@ def _build_db(config: DatabaseConfig):
     match (config.type):
         case DatabaseType.postgres:
             return SQLDB(
-                conn_str=config.conn_str
+                conn_str=config.conn_str, pool_size=config.pool_size
             )
         case _:
             raise Exception("DB not supported")

@@ -49,6 +49,7 @@ llm:
       type: pgvector
       conn_str: <put-conn-str>
       collection_name: prompt_cache
+      vector_dimension: 384
     embedder:
       type: sentence
       model: all-MiniLM-L6-v2
@@ -62,6 +63,7 @@ rag:
     type: pgvector
     conn_str: <put-conn-str>
     collection_name: node
+    vector_dimension: 384
   embedder:
     type: sentence
     model: all-MiniLM-L6-v2

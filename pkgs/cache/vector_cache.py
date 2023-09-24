@@ -2,16 +2,15 @@ from datetime import datetime, timedelta
 import json
 from pkgs import Node
 from pkgs.cache.caching import PromptCache, PromptCacheRecord
-from pkgs.chunkers.chunker import Chunker
 from pkgs.embedders.embedder import Embedder
 from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
 from pkgs.modifiers.modifier import Modifier
-from pkgs.vector_dbs.vector_db import VectorDB
+from pkgs.vector_dbs.vector_collection import VectorCollection
 
 from typing import List, TypeVar
 
 
-T = TypeVar("T")
+T = TypeVar("T", str, list, dict, Node)
 
 
 class SmallPromptCache(PromptCache):
@@ -20,17 +19,15 @@ class SmallPromptCache(PromptCache):
 
     def __init__(
         self,
-        vector_db: VectorDB,
+        vector_collection: VectorCollection,
         embedder: Embedder,
         anoymizer: Anonymizer | None = None,
         deanonimyzer: Deanonymizer | None = None,
         threshold: float = 0.1,
-        collection: str = "prompt_cache",
         expiry_in_seconds: int = 60 * 60 * 24 * 7,
     ) -> None:
-        self.vector_db = vector_db
+        self.vector_collection = vector_collection
         self.embedder = embedder
-        self.collection = collection
 
         self.anoymizer = anoymizer
         self.deanonimyzer = deanonimyzer
@@ -45,13 +42,8 @@ class SmallPromptCache(PromptCache):
         if deanonimyzer is not None:
             self.post_processors.append(deanonimyzer)
 
-        self.create()
-
-    def create(self) -> None:
-        self.vector_db.create_collection(self.collection)
-
     def destroy(self) -> None:
-        self.vector_db.drop_collection(self.collection)
+        self.vector_collection.delete_collection()
 
     def _pre_process(self, data: T) -> T:
         for pre_processor in self.pre_proccesors:
@@ -76,7 +68,7 @@ class SmallPromptCache(PromptCache):
         ]
         self.embedder.embed(nodes)
         self._pre_process(nodes)
-        self.vector_db.save_nodes(nodes=nodes, collection=self.collection)
+        self.vector_collection.save_nodes(nodes=nodes, collection=self.collection)
         return True
 
     def get(self, prompt: str) -> PromptCacheRecord | None:
@@ -85,7 +77,7 @@ class SmallPromptCache(PromptCache):
         node = [Node(content=t_prompt, metadata={}, embedding=None)]
         self.embedder.embed(node)
 
-        cache_lookup = self.vector_db.find_similar_nodes(
+        cache_lookup = self.vector_collection.find_similar_nodes(
             collection=self.collection,
             node=node[0],
             max_nodes=1,
@@ -94,8 +86,7 @@ class SmallPromptCache(PromptCache):
         if len(cache_lookup) == 0:
             return None
 
-        cache_hit = cache_lookup[0][0]
-        dist = cache_lookup[0][1]
+        cache_hit, dist = cache_lookup[0]
 
         if dist >= self.threshold:
             return None
@@ -105,7 +96,7 @@ class SmallPromptCache(PromptCache):
             and cache_hit.created_at + timedelta(seconds=self.expiry_in_seconds)
             < datetime.now()
         ):
-            self.vector_db.delete_node(cache_hit, collection=self.collection)
+            self.vector_collection.delete_node(cache_hit, collection=self.collection)
             return None
 
         deanomymized_cache = self._post_process(cache_hit)

@@ -10,12 +10,14 @@ from typing import List
 class VectorDBType(str, enum.Enum):
     pgvector = "pgvector"
 
-
 class VectorDBConfig(BaseModel):
     type: VectorDBType
     conn_str: str
-    collection_name: str = "Node"
+    pool_size: int = 20
 
+class VectorCollectionConfig(VectorDBConfig):
+    collection_name: str
+    vector_dimension: int
 
 class EmbedderType(str, enum.Enum):
     sentence = "sentence"
@@ -85,7 +87,7 @@ class CacheType(str, enum.Enum):
 
 class CacheConfig(BaseModel):
     type: CacheType
-    vector_db: VectorDBConfig | None = None
+    vector_collection: VectorCollectionConfig | None = None
     embedder: EmbedderConfig | None = None
     expiry_in_seconds: int = 60 * 60 * 24 * 7
 
@@ -105,6 +107,7 @@ class DatabaseType(str, enum.Enum):
 class DatabaseConfig(BaseModel):
     type: DatabaseType = DatabaseType.postgres
     conn_str: str
+    pool_size: int = 20
 
 
 class AuthType(str, enum.Enum):

@@ -21,10 +21,11 @@ from pkgs.chunkers.sentence_chunker import SentenceChunker
 from pkgs.embedders.sentence_transformer_embedder import SentenceTransformerEmbedder
 
 from pkgs.models.pontus.base import ChatMessage, ChatMessageRole
-from pkgs.vector_dbs.pg_vector_store import PgVectorStore
+from pkgs.vector_dbs.pg_vector_collection import PgVectorCollection
 from pkgs.llm.guidance import LLM, ModelProvider
 
 from pkgs.config.setting import getSettings
+from sqlalchemy import create_engine
 
 
 settings = getSettings()
@@ -63,7 +64,9 @@ equality_anonymizer = PresidioAnonymizer(
     [PII_Type.person, PII_Type.email],
 )
 deanonimyzer = PresidioDeanonymizer(settings.llm.anoymizer.key)
-vector_db = PgVectorStore(settings.rag.vector_db.conn_str)
+
+db_engine = create_engine(settings.rag.vector_db.conn_str)
+vector_collection = PgVectorCollection(db_engine, "Node", 384)
 llm = LLM(
     ModelProvider.OpenAI, "text-davinci-003", api_key=settings.llm.provider.api_key
 )
@@ -88,7 +91,7 @@ async def load_wiki_pages(request: DemoDocumentStoreRequest):
 
     equality_anonymizer.transform(nodes)
 
-    vector_db.save_nodes(nodes, "Node")
+    vector_collection.save_nodes(nodes)
 
 
 @router.post("/rag", tags=["demo"])
@@ -103,7 +106,7 @@ async def chat_completion_with_rag(request: DemoRAGRequest) -> DemoRAGResponse:
     similar_nodes = [
         similar_node
         for node in nodes
-        for similar_node, distance in vector_db.find_similar_nodes(node, "Node", 5)
+        for similar_node, distance in vector_collection.find_similar_nodes(node, 5)
     ]
 
     def format_context_nodes(node: Node):

@@ -19,8 +19,5 @@ class PromptCache:
     def get(self, prompt: str) -> PromptCacheRecord:
         raise NotImplementedError()
 
-    def create(self) -> None:
-        raise NotImplementedError()
-
     def destroy(self) -> None:
         raise NotImplementedError()
