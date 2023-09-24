@@ -1,4 +1,5 @@
 import enum
+import typing
 
 from pydantic import BaseModel, validator
 from pkgs.models.pontus.base import ProviderType
@@ -67,8 +68,31 @@ class ProcessorConfig(BaseModel):
     remove_toxicity: RemoveToxcityProccessorConfig | None = None
 
 
+class LoaderType(str, enum.Enum):
+    demo = "demo"
+    api_loader = "api_loader"
+
+
+class RagLoaderAuth(BaseModel):
+    username: str
+    password: str
+
+
+class RagLoaderConfig(BaseModel):
+    type: LoaderType
+    auth: RagLoaderAuth | None = None
+    endpoint: str | None = None
+    bulk_endpoint: str | None = None
+    queries: typing.Dict[str, str] | None = None
+
+
+class RagDataPopulationConfig(BaseModel):
+    loader: RagLoaderConfig
+
+
 class RagConfig(BaseModel):
     vector_db: VectorDBConfig
+    population: RagDataPopulationConfig | None = None
     embedder: EmbedderConfig
     anoymizer: AnoymizerConfig | None = None
     pre_processors: ProcessorConfig | None = None

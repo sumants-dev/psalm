@@ -6,8 +6,12 @@ from pkgs.auth.auth import Auth
 from pkgs.auth.no_auth import NoAuth
 from pkgs.cache.caching import PromptCache
 from pkgs.cache.vector_cache import SmallPromptCache
+from pkgs.chunkers.chunker import Chunker
+from pkgs.chunkers.sentence_chunker import SentenceChunker
 from pkgs.db.sql_db import SQLDB
 from pkgs.embedders.embedder import Embedder
+from pkgs.loaders.api_loader import ApiLoader
+from pkgs.loaders.demo_loader import DemoLoader
 from pkgs.embedders.sentence_transformer_embedder import SentenceTransformerEmbedder
 from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
 from pkgs.modifiers.anonymity.presidio_anonymizer import (
@@ -24,15 +28,17 @@ from pkgs.models.pontus.base import (
     ProviderType,
 )
 
+from requests.auth import HTTPBasicAuth
+
 from copy import deepcopy
 from sqlalchemy import create_engine
 from typing import TypeVar, List, Dict, Any
 
 
 import openai
-from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, ApplicationConfig, AuthConfig, AuthType, CacheConfig, CacheType, DatabaseConfig, DatabaseType, EmbedderConfig, EmbedderType, ProcessorConfig, ProviderConfig, RagConfig, VectorDBConfig, VectorCollectionConfig, VectorDBType
+from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, ApplicationConfig, AuthConfig, AuthType, CacheConfig, CacheType, DatabaseConfig, DatabaseType, EmbedderConfig, EmbedderType, LoaderType, ProcessorConfig, ProviderConfig, RagConfig, RagDataPopulationConfig, VectorDBConfig, VectorDBType, VectorCollectionConfig
+from pkgs.population.population import Population
 from pkgs.vector_dbs.pg_vector_collection import PgVectorCollection
-
 from pkgs.vector_dbs.vector_collection import VectorCollection
 from pkgs.config.setting import (
     getSettings,
@@ -52,6 +58,8 @@ class Rag:
         embedder: Embedder,
         anoymizer: Anonymizer | None,
         deanoymizer: Deanonymizer | None,
+        population: Population | None = None,
+        chunker: Chunker = SentenceChunker(2, 256), # TODO: make this configurable
         pre_processors: List[Modifier] = [],
         post_processors: List[Modifier] = [],
     ) -> None:
@@ -60,8 +68,10 @@ class Rag:
         self._embedder = embedder
         self.pre_processors = pre_processors
         self.post_processors = post_processors
+        self.population = population
         self._anoymizer = anoymizer
         self._deanoymize = deanoymizer
+        self.chunker = chunker
 
         if anoymizer:
             self.pre_processors.append(anoymizer)
@@ -247,6 +257,7 @@ def build_orchestrator():
 
     rag = Rag(
         config=settings.rag,
+        population=_build_population(settings.rag.population) if settings.rag.population else None,
         vector_collection=_build_vector_collection(settings.rag.vector_collection) ,
         embedder=_build_embedder(settings.rag.embedder),
         anoymizer=_build_anoymizer(settings.rag.anoymizer) if settings.rag.anoymizer else None,
@@ -258,6 +269,29 @@ def build_orchestrator():
     orchestrator.set_llm(llm)
     orchestrator.set_rag(rag)
     orchestrator.set_application(app)
+
+def _build_population(config: RagDataPopulationConfig) -> Population:
+    match (config.loader.type):
+        case LoaderType.demo:
+            return Population(loader=DemoLoader(),)
+        case LoaderType.api_loader:
+            assert config.loader.endpoint is not None, "endpoint must be set for api loader"
+            assert config.loader.auth is not None, "auth must be set for api loader"
+            assert config.loader.bulk_endpoint is not None, "bulk_endpoint must be set for api loader"
+            return Population(
+                loader=ApiLoader(
+                    endpoint=config.loader.endpoint,
+                    bulk_endpoint=config.loader.bulk_endpoint,
+                    auth=HTTPBasicAuth(
+                        username=config.loader.auth.username,
+                        password=config.loader.auth.password
+                    )
+                )
+            )
+        case _:
+            return Population(loader=DemoLoader())
+
+
 
 def _build_cache(config: CacheConfig, anoymizer: Anonymizer | None = None, deanonimyzer: Deanonymizer | None = None) -> PromptCache | None:
     match (config.type):

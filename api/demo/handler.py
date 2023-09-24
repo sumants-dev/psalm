@@ -81,9 +81,9 @@ async def load_wiki_pages(request: DemoDocumentStoreRequest):
 
     nodes = [
         node
-        for metadata, page in wiki_pages
+        for data in wiki_pages
         for node in sentence_chunker.text_to_nodes(
-            rm_stopwords.transform(page), metadata
+            rm_stopwords.transform(data["text"]), data["metadata"]
         )
     ]
 

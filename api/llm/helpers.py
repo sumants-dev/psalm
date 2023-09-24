@@ -27,7 +27,7 @@ def retrieve_context(
     def format_context_nodes(node: Node):
         # NOTE: we deanomize here and then reanoyimize in the handler
         title = node.metadata["doc"]
-        content = orchestrator.rag.pre_process(node.content)
+        content = orchestrator.rag.post_process(node.content)
         return f"From the document with the title {title}, {content}"
 
     raw_context = "\n".join(map(format_context_nodes, similar_nodes))

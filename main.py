@@ -18,7 +18,9 @@ build_orchestrator()
 from api.llm.handler import router as openapi_router
 from api.demo.handler import router as demo_router
 from api.auth.handler import router as auth_router
+from api.rag.handler import router as rag_router
 
 app.include_router(openapi_router, prefix="/llm")
+app.include_router(rag_router, prefix="/rag")
 app.include_router(auth_router, prefix="/auth")
 app.include_router(demo_router, prefix="/demo")
