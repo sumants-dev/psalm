@@ -1,10 +1,9 @@
 from typing import List
 from sentence_transformers import SentenceTransformer
 from pkgs.embedders.embedder import Embedder
-import enum
 
 
-class SentenceEmbedder(Embedder):
+class SentenceTransformerEmbedder(Embedder):
     def __init__(self, model_name: str, max_length: int) -> None:
         self.model = SentenceTransformer(f"sentence-transformers/{model_name}")
         self.max_length = max_length

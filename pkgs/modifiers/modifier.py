@@ -1,9 +1,11 @@
-from typing import Dict, List, TypeVar
+from typing import TypeVar
 from pkgs import Node
 from pkgs.models.pontus.base import ChatMessage
 from pkgs.models import pydantic_openai
 
-T = TypeVar("T")
+transform_types = (str, list, dict, Node)
+
+T = TypeVar("T", *transform_types)
 
 
 class Modifier:
@@ -25,10 +27,11 @@ class Modifier:
             data = self._transform(data)
         elif isinstance(data, dict):
             for key in data:
-                if isinstance(data[key], (str, list, dict)):
+                if isinstance(data[key], transform_types):
                     data[key] = self.transform(data[key])
         elif isinstance(data, Node):
             data.content = self._transform(data.content)
+            data.metadata = self.transform(data.metadata)
         elif isinstance(data, list):
             assert data
             if isinstance(data[0], Node):
@@ -43,20 +46,6 @@ class Modifier:
                     choice.message.content = self._transform(choice.message.content)
             else:
                 for i in range(len(data)):
-                    if isinstance(data[i], (str, list, dict)):
+                    if isinstance(data[i], transform_types):
                         data[i] = self.transform(data[i])
         return data
-
-
-class MultiModifier(Modifier):
-    def __init__(self, modifiers: List[Modifier]):
-        self.modifiers = modifiers
-
-    def _transform(self, text: str) -> str:
-        for modifier in self.modifiers:
-            text = modifier._transform(text)
-        return text
-
-    def transform(self, nodes: List[Node]):
-        for modifier in self.modifiers:
-            modifier.transform(nodes)

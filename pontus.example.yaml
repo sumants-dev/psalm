@@ -33,7 +33,7 @@ llm:
       max_length: 256
 
   pre_processors:
-    remove_toxcity:
+    remove_toxicity:
       type: simple
 rag:
   vector_db:

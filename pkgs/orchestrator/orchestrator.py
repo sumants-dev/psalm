@@ -8,7 +8,7 @@ from pkgs.cache.caching import PromptCache
 from pkgs.cache.vector_cache import SmallPromptCache
 from pkgs.db.sql_db import SQLDB
 from pkgs.embedders.embedder import Embedder
-from pkgs.embedders.sentence_embedder import SentenceEmbedder
+from pkgs.embedders.sentence_transformer_embedder import SentenceTransformerEmbedder
 from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
 from pkgs.modifiers.anonymity.presidio_anonymizer import (
     PresidioAnonymizer,
@@ -286,7 +286,7 @@ def _build_processors(config: ProcessorConfig) -> List[Modifier]:
 def _build_embedder(config: EmbedderConfig) -> Embedder:
     match (config.type):
         case EmbedderType.sentence:
-            return SentenceEmbedder(
+            return SentenceTransformerEmbedder(
                 model_name=config.model,
                 max_length=config.max_length,
             )

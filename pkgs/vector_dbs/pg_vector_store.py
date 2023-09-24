@@ -1,4 +1,4 @@
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict
 from pkgs import Node
 from pkgs.vector_dbs.vector_db import VectorDB
 from sqlalchemy import create_engine, sql
@@ -7,10 +7,6 @@ from math import exp
 
 
 class PgVectorStore(VectorDB):
-    """
-    TODO: Table Creation / Destruction
-    """
-
     save_nodes_query = (
         " (content, metadata, embedding) VALUES (:content, :metadata, :embedding)"
     )

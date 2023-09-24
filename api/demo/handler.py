@@ -18,7 +18,7 @@ from pkgs.modifiers.anonymity.presidio_anonymizer import (
     EntityResolution,
 )
 from pkgs.chunkers.sentence_chunker import SentenceChunker
-from pkgs.embedders.sentence_embedder import SentenceEmbedder
+from pkgs.embedders.sentence_transformer_embedder import SentenceTransformerEmbedder
 
 from pkgs.models.pontus.base import ChatMessage, ChatMessageRole
 from pkgs.vector_dbs.pg_vector_store import PgVectorStore
@@ -49,7 +49,7 @@ RagSystemPromptMessage = ChatMessage(
 loader = WikiLoader()
 rm_stopwords = RemoveStopWords()
 sentence_chunker = SentenceChunker(2, 256)
-sentence_embedder = SentenceEmbedder("all-MiniLM-L6-v2", 256)
+sentence_embedder = SentenceTransformerEmbedder("all-MiniLM-L6-v2", 256)
 containment_anonymizer = PresidioAnonymizer(
     settings.llm.anoymizer.key,
     0.5,
