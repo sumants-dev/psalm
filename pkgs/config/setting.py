@@ -9,6 +9,7 @@ from pkgs.orchestrator.config import (
     ApplicationConfig,
     EmbedderConfig,
     LLMConfig,
+    PrivacyConfig,
     ProviderConfig,
     RagConfig,
     VectorDBConfig,
@@ -20,6 +21,7 @@ class Settings(BaseModel):
     version: str
     llm: LLMConfig
     rag: RagConfig
+    privacy: PrivacyConfig
     application: ApplicationConfig
 
 

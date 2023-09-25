@@ -2,10 +2,19 @@ from typing import TypeVar
 from pkgs import Node
 from pkgs.models.pontus.base import ChatMessage
 from pkgs.models import pydantic_openai
+from typing import List
 
 transform_types = (str, list, dict, Node)
 
-T = TypeVar("T", *transform_types)
+T = TypeVar(
+    "T",
+    str,
+    list,
+    dict,
+    Node,
+    List[ChatMessage],
+    List[pydantic_openai.ChatCompletionChoice],
+)
 
 
 class Modifier:
@@ -36,10 +45,12 @@ class Modifier:
             assert data
             if isinstance(data[0], Node):
                 for node in data:
+                    assert isinstance(node, Node)
                     node.content = self._transform(node.content)
             elif isinstance(data[0], ChatMessage):
                 for message in data:
-                    message.content = self._transform(message.content)
+                    assert isinstance(message, ChatMessage)
+                    message.content = self._transform(message.content or "")
             elif isinstance(data[0], pydantic_openai.ChatCompletionChoice):
                 for choice in data:
                     assert isinstance(choice, pydantic_openai.ChatCompletionChoice)
@@ -47,5 +58,5 @@ class Modifier:
             else:
                 for i in range(len(data)):
                     if isinstance(data[i], transform_types):
-                        data[i] = self.transform(data[i])
+                        data[i] = self.transform(data[i])  # type: ignore
         return data

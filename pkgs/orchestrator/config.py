@@ -11,23 +11,35 @@ from typing import List
 class VectorDBType(str, enum.Enum):
     pgvector = "pgvector"
 
+
 class VectorDBConfig(BaseModel):
     type: VectorDBType
     conn_str: str
     pool_size: int = 20
 
+
 class VectorCollectionConfig(VectorDBConfig):
     collection_name: str
-    vector_dimension: int
+
+
+class ChunkerType(str, enum.Enum):
+    sentence = "sentence"
+    nltk = "nltk"
+    spacy = "spacy"
+
+
+class ChunkerConfig(BaseModel):
+    type: ChunkerType
+    chunk_overlap: int
+
 
 class EmbedderType(str, enum.Enum):
-    sentence = "sentence"
+    sentence_transformer = "sentence_transformer"
 
 
 class EmbedderConfig(BaseModel):
     type: EmbedderType
     model: str
-    max_length: int
 
 
 class AnoymizerType(str, enum.Enum):
@@ -93,8 +105,8 @@ class RagDataPopulationConfig(BaseModel):
 class RagConfig(BaseModel):
     vector_collection: VectorCollectionConfig
     population: RagDataPopulationConfig | None = None
+    chunker: ChunkerConfig
     embedder: EmbedderConfig
-    anoymizer: AnoymizerConfig | None = None
     pre_processors: ProcessorConfig | None = None
     post_processors: ProcessorConfig | None = None
 
@@ -118,10 +130,25 @@ class CacheConfig(BaseModel):
 
 class LLMConfig(BaseModel):
     provider: ProviderConfig
-    anoymizer: AnoymizerConfig
     pre_processors: ProcessorConfig | None = None
     post_processors: ProcessorConfig | None = None
     cache: CacheConfig | None = None
+
+
+class TokenMappingType(str, enum.Enum):
+    in_memory = "in_memory"
+
+
+class TokenMappingConfig(BaseModel):
+    type: TokenMappingType = TokenMappingType.in_memory
+
+
+DefaultTokenMappingConfig = TokenMappingConfig()
+
+
+class PrivacyConfig(BaseModel):
+    anoymizer: AnoymizerConfig
+    token_mapping: TokenMappingConfig = DefaultTokenMappingConfig
 
 
 class DatabaseType(str, enum.Enum):

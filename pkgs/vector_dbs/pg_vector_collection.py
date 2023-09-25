@@ -16,17 +16,24 @@ class PgVectorCollection(VectorCollection):
 
     find_nodes_order = " ORDER BY 3 LIMIT :max_nodes;"
 
-    def __init__(self, engine: SQLAlchemyEngine, collection: str, vector_dimension: int, include_metadata: bool = True):
+    def __init__(
+        self,
+        engine: SQLAlchemyEngine,
+        collection: str,
+        vector_dimension: int,
+        include_metadata: bool = True,
+    ):
         self.engine = engine
         self.collection = self._sanitize_collection(collection)
+        self.table = f"Pontus.{self.collection}"
         self.include_metadata = include_metadata
         assert vector_dimension > 0, "Vectors must have non-negative dimension"
         self.dim = vector_dimension
         self.is_queryable = True
-        
+
         if self.include_metadata:
             COLLECTION_SQL = f"""
-                CREATE TABLE IF NOT EXISTS Pontus.{self.collection} (
+                CREATE TABLE IF NOT EXISTS {self.table} (
                     id bigserial primary key,
                     content text not null,
                     metadata JSONB not null,
@@ -36,11 +43,11 @@ class PgVectorCollection(VectorCollection):
             """
 
             INDEX_SQL = f"""
-                CREATE INDEX IF NOT EXISTS ix_{self.collection} ON Pontus.{self.collection} USING gin (metadata jsonb_path_ops);
+                CREATE INDEX IF NOT EXISTS ix_{self.collection} ON {self.table} USING gin (metadata jsonb_path_ops);
             """
         else:
             COLLECTION_SQL = f"""
-                CREATE TABLE IF NOT EXISTS Pontus.{self.collection} (
+                CREATE TABLE IF NOT EXISTS {self.table} (
                     id bigserial primary key,
                     content text not null,
                     embedding vector({self.dim}) not null,
@@ -49,15 +56,17 @@ class PgVectorCollection(VectorCollection):
             """
 
             INDEX_SQL = f"""
-                CREATE INDEX ix_{self.collection} ON Pontus.{self.collection} USING hash (content);
+                CREATE INDEX ix_{self.collection} ON {self.table} USING hash (content);
             """
 
         try:
             self.execute(cmd="CREATE SCHEMA IF NOT EXISTS Pontus")
             self.execute(cmd=COLLECTION_SQL)
         except Exception as e:
-            raise Exception(f"Failed to initialize PgVectorCollection {self.collection}, \n{e}")
-        try: 
+            raise Exception(
+                f"Failed to initialize PgVectorCollection {self.collection}, \n{e}"
+            )
+        try:
             self.execute(cmd=INDEX_SQL)
         except Exception as e:
             print("Bypassing index creation")
@@ -66,11 +75,11 @@ class PgVectorCollection(VectorCollection):
         """
         Enforce strict constraints on collection to avoid SQL injection
         """
-        return "".join(c for c in collection if c.isalnum())  
+        return "".join(c for c in collection if c.isalnum())
 
     def delete_collection(self):
         self.execute(f"DROP INDEX IF EXISTS ix_{self.collection};")
-        self.execute(f"DROP TABLE IF EXISTS Pontus.{self.collection};")
+        self.execute(f"DROP TABLE IF EXISTS {self.table};")
         self.is_queryable = False
 
     def execute(self, cmd: str, parameters: Dict | List[Dict] | None = None):
@@ -89,31 +98,31 @@ class PgVectorCollection(VectorCollection):
         def serialize_node(node: Node) -> Dict:
             serialized_nd = {
                 "content": node.content,
-                "embedding": dumps(node.embedding)
+                "embedding": dumps(node.embedding),
             }
             if self.include_metadata:
                 serialized_nd["metadata"] = dumps(node.metadata)
             return serialized_nd
 
-        serialized_nodes = [
-            serialize_node(node)
-            for node in nodes
-        ]
+        serialized_nodes = [serialize_node(node) for node in nodes]
 
-        query = text("INSERT INTO " + self.collection + self.save_nodes_query)
+        query = text("INSERT INTO " + self.table + self.save_nodes_query)
         with self.engine.connect() as conn:
             conn.execute(query, serialized_nodes)
             conn.commit()
 
     def find_similar_nodes(
-        self, node: Node, max_nodes: int = 5, metric: SimilarityMetric = SimilarityMetric.L2
+        self,
+        node: Node,
+        max_nodes: int = 5,
+        metric: SimilarityMetric = SimilarityMetric.L2,
     ) -> List[Tuple[Node, float]]:
         find_nodes_select = f"SELECT content, {'metadata, ' if self.include_metadata else ''}embedding <{metric.value}> :embedding AS distance, created_at FROM "
 
         if node.metadata and self.include_metadata:
             query = text(
                 find_nodes_select
-                + self.collection
+                + self.table
                 + self.find_nodes_where
                 + self.find_nodes_order
             )
@@ -123,15 +132,18 @@ class PgVectorCollection(VectorCollection):
                 max_nodes=max_nodes,
             )
         else:
-            query = text(
-                find_nodes_select + self.collection + self.find_nodes_order
-            )
+            query = text(find_nodes_select + self.table + self.find_nodes_order)
             params = dict(embedding=dumps(node.embedding), max_nodes=max_nodes)
 
         with self.engine.connect() as conn:
             data = [
                 (
-                    Node(node.content, node.metadata if self.include_metadata else {}, None, created_at=node.created_at),
+                    Node(
+                        node.content,
+                        node.metadata if self.include_metadata else {},
+                        None,
+                        created_at=node.created_at,
+                    ),
                     1 - exp(-abs(node.distance)),
                 )
                 for node in conn.execute(query, params)
@@ -139,7 +151,7 @@ class PgVectorCollection(VectorCollection):
             return data
 
     def delete_node(self, node: Node):
-        query = text("DELETE FROM " + self.collection + " WHERE content = :content")
+        query = text("DELETE FROM " + self.table + " WHERE content = :content")
         with self.engine.connect() as conn:
             conn.execute(query, {"content": node.content})
             conn.commit()

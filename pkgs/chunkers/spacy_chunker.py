@@ -1,10 +1,11 @@
 from typing import List
 from pkgs.chunkers.chunker import Chunker
+from spacy import load
 
 
-class SentenceChunker(Chunker):
+class SpacyChunker(Chunker):
     """
-    Splits documents by periods
+    Splits documents using spacy's NLP tokenizer
     """
 
     def __init__(
@@ -15,4 +16,4 @@ class SentenceChunker(Chunker):
         self.max_overlap = max_overlap
 
     def _split_text(self, text: str) -> List[str]:
-        return text.split(".")
+        return [str(s) for s in load("en_core_web_lg")]

@@ -49,11 +49,9 @@ llm:
       type: pgvector
       conn_str: <put-conn-str>
       collection_name: prompt_cache
-      vector_dimension: 384
     embedder:
-      type: sentence
+      type: sentence_transformer
       model: all-MiniLM-L6-v2
-      max_length: 256
 
   pre_processors:
     remove_toxicity:
@@ -63,11 +61,12 @@ rag:
     type: pgvector
     conn_str: <put-conn-str>
     collection_name: node
-    vector_dimension: 384
-  embedder:
+  chunker:
     type: sentence
+    chunk_overlap: 10
+  embedder:
+    type: sentence_transformer
     model: all-MiniLM-L6-v2
-    max_length: 256
   anoymizer:
     type: presidio
     key: WmZq4t7w!z%C&F)J

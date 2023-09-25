@@ -19,14 +19,16 @@ def retrieve_context(
     orchestrator.rag.embedder.embed(nodes)
 
     similar_nodes = orchestrator.rag.find_context_nodes(
-        nodes,
-        max_nodes=5,
+        nodes=nodes,
+        # TODO: go back to 5 from 1
+        max_nodes=3,
     )
 
     def format_context_nodes(node: Node):
         # NOTE: we deanomize here and then reanoyimize in the handler
-        title = node.metadata["doc"]
-        content = orchestrator.rag.post_process(node.content)
+        nd = orchestrator.privacy.deanoymizer.transform(node)
+        title = nd.metadata["doc"]
+        content = nd.content
         return f"From the document with the title {title}, {content}"
 
     raw_context = "\n".join(map(format_context_nodes, similar_nodes))
@@ -41,11 +43,15 @@ def get_cache(
     if not ai_orchestrator.llm.cache or not key_cache_prompt:
         return None
 
-    cache_record = ai_orchestrator.llm.cache.get(key_cache_prompt)
+    cache_record = ai_orchestrator.llm.cache.get(
+        ai_orchestrator.privacy.anoymizer.transform(key_cache_prompt)
+    )
 
     if cache_record:
         return ChatCompletionSecureResponse(
-            messages=cache_record.messages,
+            messages=ai_orchestrator.privacy.deanoymizer.transform(
+                cache_record.messages
+            ),
             provider_response=cache_record.provider_response,
             raw_provider_response=None,
             raw_request=None,

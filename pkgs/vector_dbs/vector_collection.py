@@ -2,9 +2,11 @@ from pkgs import Node
 from typing import List, Tuple
 from enum import Enum
 
+
 class SimilarityMetric(Enum):
     L2 = "-"
     INNER = "#"
+
 
 class VectorCollection:
     """
@@ -18,10 +20,13 @@ class VectorCollection:
         return NotImplementedError("save_nodes must be implemented")
 
     def find_similar_nodes(
-        self, node: Node, max_nodes: int = 5, metric: SimilarityMetric = SimilarityMetric.L2
+        self,
+        node: Node,
+        max_nodes: int = 5,
+        metric: SimilarityMetric = SimilarityMetric.L2,
     ) -> List[Tuple[Node, float]]:
         """
-        Returns nodes similar to the inputted node, 
+        Returns nodes similar to the inputted node,
         and their distance from the node given the metric
         """
 
@@ -29,6 +34,6 @@ class VectorCollection:
 
     def delete_collection(self):
         raise NotImplementedError("delete_collection must be implemented")
-    
+
     def delete_node(self, node: Node):
         raise NotImplementedError("delete_node must be implemented")

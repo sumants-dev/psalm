@@ -16,6 +16,8 @@ class Embedder:
         """
         Attach embeddings to nodes
         """
-        embeddings = self._embed([node.content for node in nodes])
+        embeddings = self._embed(
+            [" ".join(node.content.split(" ")[: self.max_length]) for node in nodes]
+        )
         for node, embedding in zip(nodes, embeddings):
             node.embedding = embedding

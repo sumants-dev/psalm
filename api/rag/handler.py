@@ -28,7 +28,7 @@ def start_loader(credentials: Annotated[HTTPBasicCredentials, Depends(security)]
     nodes = [
         node
         for _, loader in bulk_load.items()
-        for node in ai_orchestrator.rag.chunker.text_to_nodes(
+        for node in ai_orchestrator.rag.chunker.document_to_nodes(
             text=loader["text"],
             metadata=loader["metadata"],
         )
@@ -60,7 +60,7 @@ def load(
     nodes = [
         node
         for loader in bulk_load
-        for node in ai_orchestrator.rag.chunker.text_to_nodes(
+        for node in ai_orchestrator.rag.chunker.document_to_nodes(
             text=loader["text"],
             metadata=loader["metadata"],
         )

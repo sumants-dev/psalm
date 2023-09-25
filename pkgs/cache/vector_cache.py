@@ -21,26 +21,13 @@ class SmallPromptCache(PromptCache):
         self,
         vector_collection: VectorCollection,
         embedder: Embedder,
-        anoymizer: Anonymizer | None = None,
-        deanonimyzer: Deanonymizer | None = None,
         threshold: float = 0.1,
         expiry_in_seconds: int = 60 * 60 * 24 * 7,
     ) -> None:
         self.vector_collection = vector_collection
         self.embedder = embedder
-
-        self.anoymizer = anoymizer
-        self.deanonimyzer = deanonimyzer
-
         self.expiry_in_seconds = expiry_in_seconds
-
         self.threshold = threshold
-
-        if anoymizer is not None:
-            self.pre_proccesors.append(anoymizer)
-
-        if deanonimyzer is not None:
-            self.post_processors.append(deanonimyzer)
 
     def destroy(self) -> None:
         self.vector_collection.delete_collection()

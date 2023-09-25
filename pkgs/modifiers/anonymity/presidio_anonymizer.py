@@ -1,16 +1,21 @@
+import secrets
 from presidio_analyzer import AnalyzerEngine
 import base64
 import hashlib
 from Crypto import Random
 from Crypto.Cipher import AES
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from pkgs.modifiers.anonymity.anonymizer import (
     Anonymizer,
     Deanonymizer,
     EntityResolution,
     PII_Type,
 )
+
+from typing_extensions import TypedDict
+
+from pkgs.token_mapping.token_mapping import TokenMapper
 
 
 class PresidioAnonymizer(Anonymizer):
@@ -21,12 +26,14 @@ class PresidioAnonymizer(Anonymizer):
         key: str,
         threshold: float,
         entity_resolution: EntityResolution,
+        token_mapper: TokenMapper,
         pii_types: List[PII_Type] = [],
     ):
         self.key = hashlib.sha256(key.encode()).digest()
         self.pii_types = [pii_type.value for pii_type in pii_types]
         assert threshold >= 0 and threshold <= 1
         self.threshold = threshold
+        self.token_mapper = token_mapper
         self.entity_resolution = entity_resolution
         self.analyzer = AnalyzerEngine()
 
@@ -67,8 +74,9 @@ class PresidioAnonymizer(Anonymizer):
 class PresidioDeanonymizer(Deanonymizer):
     bs = AES.block_size
 
-    def __init__(self, key: str):
+    def __init__(self, key: str, token_mapper: TokenMapper):
         self.key = hashlib.sha256(key.encode()).digest()
+        self.token_mapper = token_mapper
 
     def _decrypt(self, enc: str | bytes) -> str:
         if isinstance(enc, str):

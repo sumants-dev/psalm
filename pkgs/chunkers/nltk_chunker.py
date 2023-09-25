@@ -1,10 +1,11 @@
 from typing import List
 from pkgs.chunkers.chunker import Chunker
+from nltk.tokenize import sent_tokenize
 
 
-class SentenceChunker(Chunker):
+class NLTKChunker(Chunker):
     """
-    Splits documents by periods
+    Splits documents using nltk's NLP tokenizer
     """
 
     def __init__(
@@ -15,4 +16,4 @@ class SentenceChunker(Chunker):
         self.max_overlap = max_overlap
 
     def _split_text(self, text: str) -> List[str]:
-        return text.split(".")
+        return sent_tokenize(text=text)

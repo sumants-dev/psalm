@@ -21,6 +21,7 @@ psycopg2-binary = "*"
 requests = "*"
 passlib = {extras = ["bycrypt"], version = "*"}
 bcrypt = "*"
+nltk = "*"
 
 [dev-packages]
 mypy = "*"
