@@ -54,16 +54,10 @@ version: "0.1"
 application:
   database:
     type: postgres
-    conn_str: postgresql://postgres:postgres@localhost:5435/pontus
+    conn_str: <put-conn-str>
   authentication:
-    type: api_key
-    default_admin_username: admin
-    default_admin_api_key: "1234"
-llm:
-  provider:
-    type: openai
-    default_model: gpt-3.5-turbo
-    api_key: <put-api-key-here>
+    type: no_auth
+privacy:
   anoymizer:
     type: presidio
     # don't use this key in production, it's just for testing
@@ -73,21 +67,22 @@ llm:
     pii_types:
       - person
       - email_address
+llm:
+  provider:
+    type: openai
+    default_model: gpt-3.5-turbo
+    api_key: <put-api-key>
   cache:
     type: small_cache
-    vector_db:
+    vector_collection:
       type: pgvector
       conn_str: <put-conn-str>
       collection_name: prompt_cache
     embedder:
       type: sentence_transformer
       model: all-MiniLM-L6-v2
-
-  pre_processors:
-    remove_toxicity:
-      type: simple
 rag:
-  vector_db:
+  vector_collection:
     type: pgvector
     conn_str: <put-conn-str>
     collection_name: node
@@ -97,14 +92,6 @@ rag:
   embedder:
     type: sentence_transformer
     model: all-MiniLM-L6-v2
-  anoymizer:
-    type: presidio
-    key: WmZq4t7w!z%C&F)J
-    threshold: .5
-    entity_resolution: containment
-    pii_types:
-      - person
-      - email_address
 ```
 
 2. Create your virtual environment `python -m venv .venv`
