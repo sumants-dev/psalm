@@ -27,14 +27,17 @@ llm:
       conn_str: <put-conn-str>
       collection_name: prompt_cache
     embedder:
-      type: sentence
+      type: sentence_transformer
       model: all-MiniLM-L6-v2
 rag:
   vector_collection:
     type: pgvector
     conn_str: <put-conn-str>
     collection_name: node
-  embedder:
+  chunker:
     type: sentence
+    chunk_overlap: 10
+  embedder:
+    type: sentence_transformer
     model: all-MiniLM-L6-v2
  
