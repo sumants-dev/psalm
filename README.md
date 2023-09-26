@@ -3,7 +3,7 @@
 
   <img src="logo.jpg"  width="400"/>
 
-  [Home](htpps://www.pontus.so) - [Docs](https://www.docs.pontus.so) - [Bug Report](https://github.com/PontusAI/Pontus/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D) 
+  [Home](https://www.pontus.so) - [Docs](https://www.docs.pontus.so) - [Bug Report](https://github.com/PontusAI/Pontus/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D) 
 </div>
 
 `Pontus` allows you to build AI faster with privacy embeded throughout easily. 
@@ -11,8 +11,9 @@
 Privacy should be easy. A declarative config defines core building blocks such as **PII Santization**, **Caching**, **Secure RAG**, and more. Pontus takes this yaml and constructs a microservices that acts a layer between your services and LLM providers.
 
 ## Table of Contents
-* [Overview](##overview)
-* [Features](##features)
+* [Overview](#overview)
+* [Features](#features)
+* [Installation](#installation)
 * [Quickstart](#quickstart)
 * [Doc and Support](#docs-and-support)
 * [Contributing](#contributing)
@@ -27,13 +28,20 @@ The following diagram shows how Pontus works at high level.
 We act as a layer in between you and LLMs. We make sure privacy is ensured when interacting with LLM providers.
 
 ## Features
-✅ **Smart Tokenization**: Emails, names, addresses are automatically detected and tokenized when interacting with LLMs.
+✅ **Smart Tokenization**: Emails, names, addresses are automatically detected and tokenized when interacting with LLMs
+
 ✅ **Caching**: Save on GPT calls with semantic prompt cache
+
 ✅ **Secure Retrieval Augmented Generation**: All documents stored in a vector db do not have any PII at Rest
-✅ **Declarative**: Configure simply with yaml that specifis building
+
+✅ **Declarative**: Configure simply with yaml that specific LLM building
+
 ✅ **Self Hosting**: Limit 3rd parties places of attacks
+
 ⌛ **Validation**: Structure are enforced in safe way
+
 ⌛ **Toxicity Detection**: Prevent NSFW content from being sent 
+
 ⌛ **Monitoring**: Understand what prompts are being logged and sent
 
 ## Installation
@@ -104,7 +112,7 @@ rag:
 4. Install requirements `pip env install`
 5. Run Development Server `make dev`
 
-## How to Use the Project
+## Quickstart
 
 After running server, simply call the API. Please see the  [api refeference](www.api.pontus.so).
 
@@ -187,7 +195,7 @@ We love new contribution from small to big. Support this project by doing this.
 
 ## Philosophy
 
-We want to create a world where building AI products with privacy embedded is easy and fast. If it isn't easy nor fast, privacy first software won't be adopted. Pontus wants to solve this.
+We want to create a world where building AI products with privacy embedded is easy and fast. If it isn't easy nor fast, privacy first software won't be adopted. Pontus wants to solve this. Make privacy first AI software easy
 
 ## Open Core Model
 This repo is available under [MIT expat license](/LICENSE), except `ee` directory if applicable. We have open core model. Building in open makes safer and better software. We do intend to charge for enterprise features that aren't applicable to 90% of developers.
