@@ -3,7 +3,7 @@
 
   <img src="logo.jpg"  width="400"/>
 
-  [Home](https://www.pontus.so) - [Docs](https://www.docs.pontus.so) - [Bug Report](https://github.com/PontusAI/Pontus/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D) 
+  [Home](https://www.pontus.so) - [Docs](https://docs.pontus.so) - [Bug Report](https://github.com/PontusAI/Pontus/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D) 
 </div>
 
 `Pontus` allows you to build AI faster with privacy embeded throughout easily. 
