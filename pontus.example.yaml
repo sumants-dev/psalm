@@ -2,14 +2,14 @@ version: "0.1"
 application:
   database:
     type: postgres
-    conn_str: postgresql://postgres:postgres@localhost:5435/pontus
+    conn_str: env:postgres_db_conn_str
   authentication:
     type: no_auth
 privacy:
   anoymizer:
     type: presidio
     # don't use this key in production, it's just for testing
-    key: mcFsaV/gv20q7mUhmI3alg==
+    key: env:anonymizer_key
     threshold: .5
     entity_resolution: containment
     pii_types:
@@ -19,12 +19,12 @@ llm:
   provider:
     type: openai
     default_model: gpt-3.5-turbo
-    api_key: <put-your-api-key-here>
+    api_key: env:openai_api_key
   cache:
     type: small_cache
     vector_collection:
       type: pgvector
-      conn_str: <put-your-api-key-here>
+      conn_str: env:postgres_db_conn_str
       collection_name: prompt_cache
     embedder:
       type: sentence_transformer
@@ -32,7 +32,7 @@ llm:
 document_store:
   vector_collection:
     type: pgvector
-    conn_str: <put-your-api-key-here>
+    conn_str: env:postgres_db_conn_str
     collection_name: node
   chunker:
     type: simple

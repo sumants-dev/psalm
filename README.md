@@ -54,14 +54,14 @@ version: "0.1"
 application:
   database:
     type: postgres
-    conn_str: <put-conn-str>
+    conn_str: env:postgres_db_conn_str
   authentication:
     type: no_auth
 privacy:
   anoymizer:
     type: presidio
     # don't use this key in production, it's just for testing
-    key: WmZq4t7w!z%C&F)J
+    key: env:anonymizer_key
     threshold: .5
     entity_resolution: containment
     pii_types:
@@ -71,30 +71,39 @@ llm:
   provider:
     type: openai
     default_model: gpt-3.5-turbo
-    api_key: <put-api-key>
+    api_key: env:openai_api_key
   cache:
     type: small_cache
     vector_collection:
       type: pgvector
-      conn_str: <put-conn-str>
+      conn_str: env:postgres_db_conn_str
       collection_name: prompt_cache
     embedder:
       type: sentence_transformer
       model: all-MiniLM-L6-v2
-rag:
+document_store:
   vector_collection:
     type: pgvector
-    conn_str: <put-conn-str>
+    conn_str: env:postgres_db_conn_str
     collection_name: node
   chunker:
-    type: sentence
+    type: simple
     chunk_overlap: 10
   embedder:
     type: sentence_transformer
     model: all-MiniLM-L6-v2
 ```
 
-2. Run docker compose up
+2. Create your .env file
+
+```
+#Example Key: Use your own 16 character key
+anonymizer_key=FSNMN543GMNN436=
+postgres_db_conn_str=<add-your-conn-str-here>
+openai_api_key=<add-your-openai-key-here>
+```
+
+3. Run docker compose up
 
 
 ## Quick start
