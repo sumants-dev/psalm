@@ -6,9 +6,9 @@
   [Home](https://www.pontus.so) - [Docs](https://docs.pontus.so/) - [Bug Report](https://github.com/PontusAI/Pontus/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=%5BBUG%5D) 
 </div>
 
-`Pontus` allows you to build AI faster with privacy embeded throughout easily. 
+`Pontus` allows you to build AI faster with privacy embedded throughout easily. 
 
-Privacy should be easy. A declarative config defines core building blocks such as **PII Santization**, **Caching**, **Secure RAG**, and more. Pontus takes this yaml and constructs a microservices that acts a layer between your services and LLM providers.
+Pontus makes building AI faster and more private. It uses a simple configuration file to define key elements like **Anonymization**, **Caching**, **Secure Rag**, and more. With this configuration, Pontus creates a microservice layer between your software and AI providers, ensuring privacy is embedded throughout your whole infrastructure.
 
 ## Table of Contents
 * [Overview](#overview)
@@ -44,7 +44,7 @@ We act as a layer in between you and LLMs. We make sure privacy is ensured when 
 
 ⌛ **Monitoring**: Understand what prompts are being logged and sent
 
-## Installation
+## Installation (Docker)
 
 1. Create the following configuration file `pontus.yaml`. Checkout our [docs](www.docs.pontus.so) for more configuration options
 
@@ -94,14 +94,12 @@ rag:
     model: all-MiniLM-L6-v2
 ```
 
-2. Create your virtual environment `python -m venv .venv`
-3. Activate virtual environment `source .venv/bin/activate`
-4. Install requirements `pip env install`
-5. Run Development Server `make dev`
+2. Run docker compose up
 
-## Quickstart
 
-After running server, simply call the API. Please see the  [api refeference](www.api.pontus.so).
+## Quick start
+
+After running server, simply call the API. Please see the [api reference](www.api.pontus.so).
 
 ### Request Sent
 ```python

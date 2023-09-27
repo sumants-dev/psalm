@@ -7,7 +7,7 @@ from pkgs.auth.no_auth import NoAuth
 from pkgs.cache.caching import PromptCache
 from pkgs.cache.vector_cache import SmallPromptCache
 from pkgs.chunkers.chunker import Chunker
-from pkgs.chunkers.sentence_chunker import SentenceChunker
+from pkgs.chunkers.simple_chunker import SimpleChunker
 from pkgs.chunkers.nltk_chunker import NLTKChunker
 from pkgs.chunkers.spacy_chunker import SpacyChunker
 from pkgs.db.sql_db import SQLDB
@@ -38,7 +38,7 @@ from typing import TypeVar, List, Dict, Any
 
 
 import openai
-from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, ApplicationConfig, AuthConfig, AuthType, CacheConfig, CacheType, ChunkerConfig, ChunkerType, DatabaseConfig, DatabaseType, EmbedderConfig, EmbedderType, LoaderType, PrivacyConfig, ProcessorConfig, ProviderConfig, RagConfig, RagDataPopulationConfig, VectorDBConfig, VectorDBType, VectorCollectionConfig
+from pkgs.orchestrator.config import AnoymizerConfig, AnoymizerType, ApplicationConfig, AuthConfig, AuthType, CacheConfig, CacheType, ChunkerConfig, ChunkerType, DatabaseConfig, DatabaseType, EmbedderConfig, EmbedderType, LoaderType, PrivacyConfig, ProcessorConfig, ProviderConfig, DocumentStoreConfig, RagDataPopulationConfig, VectorDBConfig, VectorDBType, VectorCollectionConfig
 from pkgs.population.population import Population
 from pkgs.privacy.privacy import Privacy
 from pkgs.token_mapping.inmemory_token_mapping import InMemoryTokenMapper
@@ -53,12 +53,12 @@ from pkgs.config.setting import (
 T = TypeVar("T", str, list, dict, Node)
 
 
-class Rag:
-    config: RagConfig
+class DocumentStore:
+    config: DocumentStoreConfig
 
     def __init__(
         self,
-        config: RagConfig,
+        config: DocumentStoreConfig,
         vector_collection: VectorCollection,
         embedder: Embedder,
         population: Population | None = None,
@@ -72,7 +72,7 @@ class Rag:
         self.pre_processors = pre_processors
         self.post_processors = post_processors
         self.population = population
-        self.chunker = chunker or SentenceChunker(min_chunk_length=3, max_chunk_length=embedder.max_length)
+        self.chunker = chunker or SimpleChunker(min_chunk_length=3, max_chunk_length=embedder.max_length)
 
     def pre_process(self, data: T) -> T:
         t_data = data
@@ -200,7 +200,7 @@ class Orchestrator:
     application: Application
     privacy: Privacy
     llm: LLM
-    rag: Rag
+    doc_store: DocumentStore
 
     def set_application(self, application: Application) -> None:
         self.application = application
@@ -211,8 +211,8 @@ class Orchestrator:
     def set_llm(self, llm: LLM) -> None:
         self.llm = llm
     
-    def set_rag(self, rag: Rag) -> None:
-        self.rag = rag
+    def set_document_store(self, document_store: DocumentStore) -> None:
+        self.doc_store = document_store
     
 
     
@@ -245,26 +245,26 @@ def build_orchestrator():
     llm = LLM(
         provider=settings.llm.provider,
         cache=_build_cache(config=settings.llm.cache) if settings.llm.cache else None,
-        pre_processors=_build_processors(config=settings.rag.pre_processors) if settings.rag.pre_processors else [],
-        post_processors=_build_processors(config=settings.rag.post_processors) if settings.rag.post_processors else [],
+        pre_processors=_build_processors(config=settings.document_store.pre_processors) if settings.document_store.pre_processors else [],
+        post_processors=_build_processors(config=settings.document_store.post_processors) if settings.document_store.post_processors else [],
     )
 
-    embedder = _build_embedder(settings.rag.embedder)
-    rag = Rag(
-        config=settings.rag,
-        vector_collection=_build_vector_collection(settings.rag.vector_collection, embedder.output_dim),
-        chunker=_build_chunker(settings.rag.chunker, max_chunk_size=embedder.max_length),
+    embedder = _build_embedder(settings.document_store.embedder)
+    doc_store = DocumentStore(
+        config=settings.document_store,
+        vector_collection=_build_vector_collection(settings.document_store.vector_collection, embedder.output_dim),
+        chunker=_build_chunker(settings.document_store.chunker, max_chunk_size=embedder.max_length),
         embedder=embedder,
-        population=_build_population(settings.rag.population) if settings.rag.population else None,
-        pre_processors=_build_processors(settings.rag.pre_processors) if settings.rag.pre_processors else [],
-        post_processors=_build_processors(settings.rag.post_processors) if settings.rag.post_processors else [],
+        population=_build_population(settings.document_store.population) if settings.document_store.population else None,
+        pre_processors=_build_processors(settings.document_store.pre_processors) if settings.document_store.pre_processors else [],
+        post_processors=_build_processors(settings.document_store.post_processors) if settings.document_store.post_processors else [],
     )
 
 
     orchestrator.set_application(application=app)
     orchestrator.set_privacy(privacy=privacy)
     orchestrator.set_llm(llm=llm)
-    orchestrator.set_rag(rag=rag)
+    orchestrator.set_document_store(document_store=doc_store)
 
 def _build_token_mapper(config: PrivacyConfig):
     match (config.token_mapping.type):
@@ -317,21 +317,24 @@ def _build_processors(config: ProcessorConfig) -> List[Modifier]:
 
     return processors
 
-def _build_chunker(config: ChunkerConfig, max_chunk_size: int):
+def _build_chunker(config: ChunkerConfig | None, max_chunk_size: int):
+    if config is None:
+        return SimpleChunker(min_chunk_length=3, max_chunk_length=max_chunk_size)
+
     params = {
         "min_chunk_length": 3,
         "max_chunk_length": max_chunk_size,
         "max_overlap": config.chunk_overlap
     }
     match (config.type):
-        case ChunkerType.sentence:
-            return SentenceChunker(**params)
+        case ChunkerType.simple:
+            return SimpleChunker(**params)
         case ChunkerType.nltk:
             return NLTKChunker(**params)
         case ChunkerType.spacy:
             return SpacyChunker(**params)
         case _:
-            raise Exception("Chunker not supported")
+            return SimpleChunker(min_chunk_length=3, max_chunk_length=max_chunk_size)
             
 
 def _build_embedder(config: EmbedderConfig) -> Embedder:

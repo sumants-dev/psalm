@@ -1,5 +1,11 @@
 version: '3.8'
 services:
+  pontus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '4200:8080'
   db:
     image: postgres:15-alpine
     restart: always

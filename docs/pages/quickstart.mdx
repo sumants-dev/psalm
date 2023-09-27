@@ -1,44 +1,103 @@
+import { Steps, Callout } from 'nextra/components'
+
 # Quickstart
 
-Once you have pontus running, it is easy to use it within your application.
+Prefer to deploy to the cloud. Join the waitlist
 
-Here is a simple example of using Pontus to ask a question for a simple task, but in privacy protecting manner.
+
+<Steps>
+### Clone the [Pontus Repo](https://github.com/PontusAI/Pontus)
+```bash copy
+git clone https://github.com/PontusAI/Pontus
+```
+
+### Create the pontus.yaml file
+```bash copy
+cp pontus.example.yaml pontus.yaml
+```
+
+Then edit the following file
+
+```yaml copy
+version: "0.1"
+application:
+  database:
+    type: postgres
+    conn_str: postgresql://postgres:postgres@localhost:5435/pontus
+  authentication:
+    type: no_auth
+privacy:
+  anoymizer:
+    type: presidio
+    # don't use this key in production, it's just for testing
+    key: mcFsaV/gv20q7mUhmI3alg==
+    threshold: .5
+    entity_resolution: containment
+    pii_types:
+      - person
+      - email_address
+llm:
+  provider:
+    type: openai
+    default_model: gpt-3.5-turbo
+    api_key: <put-your-openai-key>
+  cache:
+    type: small_cache
+    vector_collection:
+      type: pgvector
+      conn_str: <put-your-postgres-database>
+      collection_name: prompt_cache
+    embedder:
+      type: sentence_transformer
+      model: all-MiniLM-L6-v2
+document_store:
+  vector_collection:
+    type: pgvector
+    conn_str: <put-your-postgres-database>
+    collection_name: node
+  chunker:
+    type: simple
+    chunk_overlap: 10
+  embedder:
+    type: sentence_transformer
+    model: all-MiniLM-L6-v2
+
+```
+
+### Build and Start Server from Docker
+```bash copy
+docker compose up --build
+```
+
+### Make a call to the server
 
 ```python
 import requests, json
+api_url = "http://localhost:4200"
 
-base_api_url = "http://localhost:8000"
-
-body = {
+request = {
     "provider": "openai",
     "model": "gpt-3.5-turbo",
+    "key_cache_prompt": "Please explain the importance of the following factor Compensation, Work Life Balance, Company mission when Rushabh is looking for jobs.",
     "messages": [
         {
             "role": "system",
-            "content": "Context: Drake is very passionate about technology and loves tinkering with new products. He enjoys spending quality time in nature in his free time. He's early in his career, so he's willing to forgo salary for career growth. Josh is an entrepreneur at heart and believes that tech companies are the best suited for making lots of money. He's willing to work long hours, as long as he's working on a cause he believes in.",
+            "content": "Do not answer the question until the context below is used.\n Here is the context: Rushabh. Rushabh is very passionate about technology and loves tinkering with new products. He enjoys spending quality time in nature in his free time. He's early in his career, so he's willing to forgo salary for career growth. ",
             "name": "context"
         },
         {
-            "role": "system",
-            "content": "Please provide a JSON response with the following format: {name: [ordered list of features]}"
-        },
-        {
             "role": "user",
-            "content": "Rank the importance of these features of jobs for Drake and Josh: 1. Compensation 2. Work Life Balance 3. Company Mission",
+            "content": "Please explain the importance of the following factor Compensation, Work Life Balance, Company mission when Rushabh is looking for jobs.",
             "name": "rankings"
         }
     ]
 }
 
-
-res = requests.post(
-    f"{base_api_url}/llm/chat/completions?full_response=true", # full_response=true will return anoymized queries for debugging
-    json=body
-)
-
+res = requests.post(api_url + "/llm/chat/completions?debug=true", json=request)
 response = res.json()
-
 ```
 
-
-That's it for now! We are working on more documentation and tutorials, but feel free to reach out to us at sumant@pontus.so if you have any questions.
+<Callout type="info">
+    Visit the docs for Pontus at http://localhost:4200
+</Callout>
+</Steps>

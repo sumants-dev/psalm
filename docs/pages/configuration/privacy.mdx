@@ -1,0 +1,26 @@
+# Privacy Spec
+
+Privacy is core to our orchestration. This spec define elements that can be configured that affect privacy. This top level component is used throughout all our flows.
+
+
+## Anoymizer
+
+* `type`- only supports presidio from microsoft. Our anoymizer are not deterministic so there is not a 1 to 1 mapping from PII to token, as GDPR implies that 1 to 1 token mapping is still PII.
+* `key`- 16 character base 64 key
+* `entity_resolution` - supports only `containment` or `equality`. Containment is that similair looking PII resolve to same entity. For example, Rushabh and Rushabh Mehta are the same entity. In contrast, `equality` implies that Rushabh and Rushabh Mehta are resolved differently
+* `threshold`- set the sensitivity of anoymizer
+* `pii_types`- we support the following [`person`, `email_address`, `phone_number`, `person`, `social`, `ip`, `card`, `bank`, `passport`, `ssn`]
+
+## Example
+```yaml copy
+privacy:
+  anoymizer:
+    type: presidio
+    # don't use this key in production, it's just for testing
+    key: mcFsaV/gv20q7mUhmI3alg==
+    threshold: .5
+    entity_resolution: containment
+    pii_types:
+      - person
+      - email_address
+```

@@ -5,6 +5,7 @@ from pkgs.cache.caching import PromptCache, PromptCacheRecord
 from pkgs.embedders.embedder import Embedder
 from pkgs.modifiers.anonymity.anonymizer import Anonymizer, Deanonymizer
 from pkgs.modifiers.modifier import Modifier
+from pkgs.orchestrator import orchestrator
 from pkgs.vector_dbs.vector_collection import VectorCollection
 
 from typing import List, TypeVar
@@ -43,6 +44,7 @@ class SmallPromptCache(PromptCache):
         return data
 
     def set(self, prompt: str, record: PromptCacheRecord) -> bool:
+        orch = orchestrator.get_orchestrator()
         if len(prompt) > self.embedder.max_length:
             return False
 
@@ -54,6 +56,7 @@ class SmallPromptCache(PromptCache):
             )
         ]
         self.embedder.embed(nodes)
+        nodes = orch.privacy.anoymizer.transform(nodes)
         self._pre_process(nodes)
         self.vector_collection.save_nodes(nodes=nodes)
         return True

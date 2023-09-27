@@ -2,7 +2,7 @@ from typing import List
 from pkgs.chunkers.chunker import Chunker
 
 
-class SentenceChunker(Chunker):
+class SimpleChunker(Chunker):
     """
     Splits documents by periods
     """

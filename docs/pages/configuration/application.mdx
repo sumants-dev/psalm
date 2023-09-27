@@ -1,0 +1,42 @@
+# Application Spec
+
+ The Application Config defines the core elements to run the API and its interactions. The following subcomponents are below
+ 
+## Database
+* `type` only supports postgres
+* `conn_str` is postgresql url that to connect to.
+
+```yaml copy
+database:
+    type: postgres
+    conn_str: postgresql://postgres:postgres@localhost:5435/pontus
+```
+## Authentication
+
+### No Authentication
+`type` is no_auth
+```yaml copy
+authentication:
+    type: no_auth
+```
+
+### Basic Authentication
+`type` is api_key
+
+A default admin will be created by the following settings, and there api endpoint for user management to add more api keys.
+```yaml copy
+authentication:
+    type: api_key
+    default_admin_username: admin
+    default_admin_api_key: admin
+```
+
+## Example
+```yaml copy
+application:
+  database:
+    type: postgres
+    conn_str: postgresql://postgres:postgres@localhost:5435/pontus
+  authentication:
+    type: no_auth
+```

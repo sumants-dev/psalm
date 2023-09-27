@@ -1,0 +1,106 @@
+# Tutorial - Write a personalized email without exposing PII
+
+## Request
+```python
+import requests, json
+api_url = "http://localhost:4200"
+
+request = {
+    "provider": "openai",
+    "model": "gpt-3.5-turbo",
+    "key_cache_prompt": "We ",
+    "messages": [
+        {
+            "role": "system",
+            "content": "Here is some context that is helpful to answer the question. David is a senior software engineer. He has been working for long time at his company. He cares about sthe ability of tcompany",
+            "name": "context"
+        },
+        {
+            "role": "user",
+            "content": "Please write a email to recruit this person for this company.",
+            "name": "rankings"
+        }
+    ]
+}
+
+res = requests.post(api_url + "/llm/chat/completions?debug=true", json=request)
+response = res.json()
+```
+
+## Response with Details
+```json 
+{
+   "messages":[
+      {
+         "role":"assistant",
+         "content":"Subject: Exciting Opportunity for a Senior Software Engineer \u2013 Join Our Team!\n\nDear David,\n\nI hope this email finds you well. I am reaching out to you with a fantastic job opportunity at our esteemed company. As a highly-regarded professional in the field, we believe that your skills and experience would be a valuable addition to our team.\n\nAt our company, we value the ability of our employees to continuously innovate and collaborate in a fast-paced and dynamic environment. As a senior software engineer, your expertise in developing cutting-edge solutions is exactly what we are looking for to further enhance our products and services.\n\nHere are some key aspects of the role:\n\n1. Developing and maintaining software applications: You will play a crucial role in our development team, utilizing your exceptional coding skills and deep understanding of software engineering principles to create robust and scalable solutions that exceed client expectations.\n\n2. Cross-functional collaboration: Working closely with other teams, such as product management and quality assurance, you will ensure seamless integration of software components and drive the success of our projects.\n\n3. Mentoring and knowledge sharing: As a senior member of our team, we expect you to take an active role in mentoring junior engineers, sharing best practices, and fostering a culture of continuous learning and improvement.\n\nAt our company, we offer not only an engaging and challenging work environment but also a host of benefits and opportunities for professional growth, including:\n\n- Competitive salary and comprehensive benefits package.\n- Continuous training and skill development programs.\n- Opportunities to attend industry conferences and workshops.\n- Collaboration with experienced colleagues in an inclusive and supportive workplace.\n\nTo further discuss your potential fit within our organization, I would like to schedule a call or an in-person meeting at your earliest convenience. Please let me know your availability, and we will arrange a suitable time.\n\nAlternatively, if you would like to apply directly, please visit our website [company website] and submit your resume through our careers portal. Be sure to mention the reference number [reference number] in your application.\n\nOnce again, we are truly excited about the possibility of having someone of your caliber on board. Should you have any questions or require further information, please do not hesitate to reach out to me. Thank you for considering this opportunity, and we look forward to hearing from you soon.\n\nWarm regards,\n\n[Your Name]\n[Your Position]\n[Company Name]\n[Contact Information]",
+         "name":null,
+         "function":null
+      }
+   ],
+   "provider_response":{
+      "id":"chatcmpl-83RylYBBJi1bJiOHepr9cEdIWuff9",
+      "object":"chat.completion",
+      "created":1695833227,
+      "model":"gpt-3.5-turbo-0613",
+      "choices":[
+         {
+            "index":0,
+            "message":{
+               "role":"assistant",
+               "content":"Subject: Exciting Opportunity for a Senior Software Engineer \u2013 Join Our Team!\n\nDear \u03b1XuwhUuM\u03b1,\n\nI hope this email finds you well. I am reaching out to you with a fantastic job opportunity at our esteemed company. As a highly-regarded professional in the field, we believe that your skills and experience would be a valuable addition to our team.\n\nAt our company, we value the ability of our employees to continuously innovate and collaborate in a fast-paced and dynamic environment. As a senior software engineer, your expertise in developing cutting-edge solutions is exactly what we are looking for to further enhance our products and services.\n\nHere are some key aspects of the role:\n\n1. Developing and maintaining software applications: You will play a crucial role in our development team, utilizing your exceptional coding skills and deep understanding of software engineering principles to create robust and scalable solutions that exceed client expectations.\n\n2. Cross-functional collaboration: Working closely with other teams, such as product management and quality assurance, you will ensure seamless integration of software components and drive the success of our projects.\n\n3. Mentoring and knowledge sharing: As a senior member of our team, we expect you to take an active role in mentoring junior engineers, sharing best practices, and fostering a culture of continuous learning and improvement.\n\nAt our company, we offer not only an engaging and challenging work environment but also a host of benefits and opportunities for professional growth, including:\n\n- Competitive salary and comprehensive benefits package.\n- Continuous training and skill development programs.\n- Opportunities to attend industry conferences and workshops.\n- Collaboration with experienced colleagues in an inclusive and supportive workplace.\n\nTo further discuss your potential fit within our organization, I would like to schedule a call or an in-person meeting at your earliest convenience. Please let me know your availability, and we will arrange a suitable time.\n\nAlternatively, if you would like to apply directly, please visit our website [company website] and submit your resume through our careers portal. Be sure to mention the reference number [reference number] in your application.\n\nOnce again, we are truly excited about the possibility of having someone of your caliber on board. Should you have any questions or require further information, please do not hesitate to reach out to me. Thank you for considering this opportunity, and we look forward to hearing from you soon.\n\nWarm regards,\n\n[Your Name]\n[Your Position]\n[Company Name]\n[Contact Information]",
+               "name":null
+            },
+            "finish_reason":"stop"
+         }
+      ],
+      "usage":{
+         "prompt_tokens":138,
+         "completion_tokens":481,
+         "total_tokens":619
+      }
+   },
+   "raw_provider_response":{
+      "id":"chatcmpl-83RylYBBJi1bJiOHepr9cEdIWuff9",
+      "object":"chat.completion",
+      "created":1695833227,
+      "model":"gpt-3.5-turbo-0613",
+      "choices":[
+         {
+            "index":0,
+            "message":{
+               "role":"assistant",
+               "content":"Subject: Exciting Opportunity for a Senior Software Engineer \u2013 Join Our Team!\n\nDear \u03b1XuwhUuM\u03b1,\n\nI hope this email finds you well. I am reaching out to you with a fantastic job opportunity at our esteemed company. As a highly-regarded professional in the field, we believe that your skills and experience would be a valuable addition to our team.\n\nAt our company, we value the ability of our employees to continuously innovate and collaborate in a fast-paced and dynamic environment. As a senior software engineer, your expertise in developing cutting-edge solutions is exactly what we are looking for to further enhance our products and services.\n\nHere are some key aspects of the role:\n\n1. Developing and maintaining software applications: You will play a crucial role in our development team, utilizing your exceptional coding skills and deep understanding of software engineering principles to create robust and scalable solutions that exceed client expectations.\n\n2. Cross-functional collaboration: Working closely with other teams, such as product management and quality assurance, you will ensure seamless integration of software components and drive the success of our projects.\n\n3. Mentoring and knowledge sharing: As a senior member of our team, we expect you to take an active role in mentoring junior engineers, sharing best practices, and fostering a culture of continuous learning and improvement.\n\nAt our company, we offer not only an engaging and challenging work environment but also a host of benefits and opportunities for professional growth, including:\n\n- Competitive salary and comprehensive benefits package.\n- Continuous training and skill development programs.\n- Opportunities to attend industry conferences and workshops.\n- Collaboration with experienced colleagues in an inclusive and supportive workplace.\n\nTo further discuss your potential fit within our organization, I would like to schedule a call or an in-person meeting at your earliest convenience. Please let me know your availability, and we will arrange a suitable time.\n\nAlternatively, if you would like to apply directly, please visit our website [company website] and submit your resume through our careers portal. Be sure to mention the reference number [reference number] in your application.\n\nOnce again, we are truly excited about the possibility of having someone of your caliber on board. Should you have any questions or require further information, please do not hesitate to reach out to me. Thank you for considering this opportunity, and we look forward to hearing from you soon.\n\nWarm regards,\n\n[Your Name]\n[Your Position]\n[Company Name]\n[Contact Information]",
+               "name":null
+            },
+            "finish_reason":"stop"
+         }
+      ],
+      "usage":{
+         "prompt_tokens":138,
+         "completion_tokens":481,
+         "total_tokens":619
+      }
+   },
+   "raw_request":[
+      {
+         "role":"system",
+         "content":"Ensure that all placeholders, including those inside quotes, are enclosed by the greek letter alpha (\u03b1), exactly as I have done in this prompt. You MUST use the greek letter (\u03b1) to indicate placeholders. Use the context below to help answer the question and follow the desired format accurately.",
+         "name":null,
+         "function":null
+      },
+      {
+         "role":"system",
+         "content":"Here is some context that is helpful to answer the question. \u03b1XuwhUuM\u03b1 is a senior software engineer. He has been working for long time at his company. He cares about sthe ability of tcompany",
+         "name":"context",
+         "function":null
+      },
+      {
+         "role":"user",
+         "content":"Please write a email to recruit this person for this company.",
+         "name":"rankings",
+         "function":null
+      }
+   ]
+}
+```

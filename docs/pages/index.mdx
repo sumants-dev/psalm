@@ -2,9 +2,9 @@ import Image from 'next/image'
 import { Callout } from 'nextra-theme-docs'
 
 # Welcome to Pontus
-Pontus is an Open Source AI orchestration layer, enabling privacy, security, and monitoring in your AI features and applications quickly and easily.
 
-Pontus is a thin layer that sits between your application and AI services. We safegaurd PII, prevent dangerous content, and provide monitoring and auditing of AI requests and responses.
+Pontus makes building AI faster and more private. It uses a simple configuration file to define key elements like **Anonymization**, **Caching**, **Secure Rag**, and more. With this configuration, Pontus creates a microservice layer between your software and AI providers, ensuring privacy is embedded throughout your whole infrastructure.
+
 
 <Callout type="warning">
     Pontus is currently in beta. We are actively working on improving the product and adding new features. If you have any feedback or feature requests, please let us by emailing us at <span> sumant@pontus.so </span>
@@ -13,7 +13,6 @@ Pontus is a thin layer that sits between your application and AI services. We sa
 
 <br/>
 
-<Image src="/LLM_Architecture.png" width="800" height="200"/>
 
 
 ## Why Pontus?
@@ -25,3 +24,6 @@ Pontus is a thin layer that sits between your application and AI services. We sa
 * **Monitoring**: We provide monitoring and auditing of AI requests and responses.
 * **Decoupling**: We decouple your application from AI services, allowing you to switch between AI services without changing your application.
 * **Self Hosting**: We allow you to self host Pontus, giving you full control over your data.
+
+## Architecture
+<Image src="/LLM_Architecture.png" width="800" height="200"/>

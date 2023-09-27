@@ -11,7 +11,7 @@ from pkgs.orchestrator.config import (
     LLMConfig,
     PrivacyConfig,
     ProviderConfig,
-    RagConfig,
+    DocumentStoreConfig,
     VectorDBConfig,
 )
 
@@ -20,7 +20,7 @@ class Settings(BaseModel):
     app_name: str = "Pontus PSaLM"
     version: str
     llm: LLMConfig
-    rag: RagConfig
+    document_store: DocumentStoreConfig
     privacy: PrivacyConfig
     application: ApplicationConfig
 

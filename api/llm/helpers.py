@@ -1,3 +1,4 @@
+import logging
 import typing
 from api.llm.models import ChatCompletionSecureResponse
 
@@ -16,9 +17,9 @@ def retrieve_context(
         for title in titles
     ]
 
-    orchestrator.rag.embedder.embed(nodes)
+    orchestrator.doc_store.embedder.embed(nodes)
 
-    similar_nodes = orchestrator.rag.find_context_nodes(
+    similar_nodes = orchestrator.doc_store.find_context_nodes(
         nodes=nodes,
         # TODO: go back to 5 from 1
         max_nodes=3,
@@ -41,17 +42,17 @@ def get_cache(
     ai_orchestrator: Orchestrator, key_cache_prompt: str | None
 ) -> ChatCompletionSecureResponse | None:
     if not ai_orchestrator.llm.cache or not key_cache_prompt:
+        print("Cache is not set or key prompt is not found")
         return None
 
     cache_record = ai_orchestrator.llm.cache.get(
-        ai_orchestrator.privacy.anoymizer.transform(key_cache_prompt)
+        key_cache_prompt
     )
+
 
     if cache_record:
         return ChatCompletionSecureResponse(
-            messages=ai_orchestrator.privacy.deanoymizer.transform(
-                cache_record.messages
-            ),
+            messages=cache_record.messages,
             provider_response=cache_record.provider_response,
             raw_provider_response=None,
             raw_request=None,

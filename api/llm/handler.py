@@ -1,3 +1,4 @@
+import logging
 import secrets
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
@@ -53,8 +54,10 @@ async def create_chat_completion(
     cache_hit = get_cache(orch, chat_completion.key_cache_prompt)
 
     if cache_hit:
+        print("Cache has been hit")
         return cache_hit
 
+    print("Cache has not hit")
     context_messages = (
         retrieve_context(
             orchestrator=orch,
@@ -89,17 +92,19 @@ async def create_chat_completion(
         )
         msg.content = raw_text
 
+    
+    chat_response.messages = orch.privacy.deanoymizer.transform(chat_response.messages)
     if chat_completion.key_cache_prompt and orch.llm.cache:
         orch.llm.cache.set(
-            prompt=orch.privacy.anoymizer.transform(chat_completion.key_cache_prompt),
+            prompt=chat_completion.key_cache_prompt,
             record=PromptCacheRecord(
-                messages=chat_completion.messages,
+                messages=chat_response.messages,
                 provider_response=chat_response.provider_response,
             ),
         )
 
     return ChatCompletionSecureResponse(
-        messages=orch.privacy.deanoymizer.transform(chat_response.messages),
+        messages=chat_response.messages,
         provider_response=chat_response.provider_response,
         raw_provider_response=chat_response.raw_provider_response,
         raw_request=msgs_to_send if debug else None,

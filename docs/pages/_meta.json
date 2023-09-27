@@ -1,8 +1,9 @@
 {
   "index": "Introduction",
   "roadmap": "Roadmap",
-  "deployment": "Deployment",
   "quickstart": "Quickstart",
+  "tutorials": "Tutorials",
+  "configuration": "Configuration",
   "concepts": "Concepts",
   "contact": {
     "title": "Contact ↗",

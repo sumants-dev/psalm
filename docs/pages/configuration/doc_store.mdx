@@ -1,0 +1,35 @@
+# Document Store Spec
+
+The document store defines where documents are kept. We use the documents to create context and sent to LLMs. Our anonymization still applies here at REST and interactions with AI.
+
+
+## Vector Collection
+* `vector_collection` is the document store that will be use for retrieval augment generation
+    * `type` support only `pgvector`
+    * `conn_str` put the postgres connection string
+    * `collection_name` defines the table to be used, we recommend node
+
+## Chunker
+* `chunker` take in documents and chunk it in snippets that have context
+    * `type` supports `simple`, `nltk`, and `spacy`
+    * `chunk_overlap` is an integer that defines that allowed overlap words between each chunk
+
+## Embedder
+* `embedder` is a the transformer applied to chunks into document store
+    * `type` only supports `sentence_transformer` from hugging face
+    * `model` any from hugging face will work
+
+## Example
+```yaml copy
+document_store:
+  vector_collection:
+    type: pgvector
+    conn_str: <put-your-api-key-here>
+    collection_name: node
+  chunker:
+    type: simple
+    chunk_overlap: 10
+  embedder:
+    type: sentence_transformer
+    model: all-MiniLM-L6-v2
+```

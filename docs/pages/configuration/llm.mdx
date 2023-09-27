@@ -1,0 +1,41 @@
+# LLM Spec
+
+LLM Spec defines the core external providers that one can interact with and any associated infrastructure elements.
+
+## Provider
+
+* `type`- openai is only supported but we intend to support others
+* `default_model`- any of supported models by the provider such as `gpt-3.5-turbo`
+* `api_key` - you api key for provider
+
+## Cache
+* `type` has only small_cache supported. This cache only supports small prompts for semantic caching
+
+### Vector Collection
+* `vector_collection` is the document store that store the cache and also is anoymized by our privacy layer.
+    * `type` support only `pgvector`
+    * `conn_str` put the postgres connection string
+    * `collection_name` defines the table name to put the prompt cache in
+
+### Embedder
+* `embedder` is a the transformer applied to embed the prompt into vector collection. 
+    * `type` only supports `sentence_transformer` from hugging face
+    * `model` any from hugging face will work
+
+## Example
+```yaml copy
+llm:
+  provider:
+    type: openai
+    default_model: gpt-3.5-turbo
+    api_key: <put-your-api-key-here>
+  cache:
+    type: small_cache
+    vector_collection:
+      type: pgvector
+      conn_str: <put-your-api-key-here>
+      collection_name: prompt_cache
+    embedder:
+      type: sentence_transformer
+      model: all-MiniLM-L6-v2
+```

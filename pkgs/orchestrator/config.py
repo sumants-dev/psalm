@@ -23,7 +23,7 @@ class VectorCollectionConfig(VectorDBConfig):
 
 
 class ChunkerType(str, enum.Enum):
-    sentence = "sentence"
+    simple = "simple"
     nltk = "nltk"
     spacy = "spacy"
 
@@ -102,10 +102,10 @@ class RagDataPopulationConfig(BaseModel):
     loader: RagLoaderConfig
 
 
-class RagConfig(BaseModel):
+class DocumentStoreConfig(BaseModel):
     vector_collection: VectorCollectionConfig
     population: RagDataPopulationConfig | None = None
-    chunker: ChunkerConfig
+    chunker: ChunkerConfig | None = None
     embedder: EmbedderConfig
     pre_processors: ProcessorConfig | None = None
     post_processors: ProcessorConfig | None = None
