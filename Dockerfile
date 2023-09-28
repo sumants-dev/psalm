@@ -16,6 +16,7 @@ COPY db ./db
 
 COPY main.py main.py
 COPY pontus.yaml pontus.yaml
+COPY .env .env
 EXPOSE 8080
 
 
