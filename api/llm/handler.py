@@ -72,11 +72,13 @@ async def create_chat_completion(
 
     anon_msgs = orch.privacy.anoymizer.transform(msgs)
 
+    """
     for msg in anon_msgs:
         raw_content = orch.privacy.token_mapper.set_alias_for_text(
             session_id=session_id, text=msg.content or ""
         )
         msg.content = raw_content
+    """
 
     msgs_to_send = [RagSystemPromptMessage] + anon_msgs
     chat_response = orch.llm.call_llm(
@@ -86,11 +88,13 @@ async def create_chat_completion(
         debug=debug,
     )
 
+    """
     for msg in chat_response.messages:
         raw_text = orch.privacy.token_mapper.get_for_text(
             session_id=session_id, text=msg.content or ""
         )
         msg.content = raw_text
+    """
 
     
     chat_response.messages = orch.privacy.deanoymizer.transform(chat_response.messages)
